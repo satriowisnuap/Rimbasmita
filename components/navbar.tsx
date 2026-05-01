@@ -1,9 +1,7 @@
 "use client";
 
-import { useSession, signIn, signOut } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
-import { useTheme } from "next-themes";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -12,49 +10,34 @@ import {
   Moon,
   Search,
   Bell,
-  BookOpen,
-  Compass,
-  PenLine,
   User,
   LogOut,
   Menu,
   X,
 } from "lucide-react";
-import { supabase } from "@/lib/supabase";
-import { useRouter, usePathname } from "next/navigation";
-import { useDashboard } from "@/hooks/dashboard/use-dashboard";
+import { useNavbar } from "@/hooks/use-navbar";
+import { useRouter } from "next/navigation";
 
 export function Navbar() {
-  const { data: session } = useSession();
-  const { theme, setTheme } = useTheme();
-  const router = useRouter();
-  const pathname = usePathname();
-  const isDashboard = pathname.startsWith("/dashboard");
-  const isProfile = pathname.startsWith("/profile");
-  const username = session?.user?.username;
-  const user = session?.user;
+  const {
+    user,
+    username,
+    theme,
+    isDashboard,
+    isProfile,
+    navLinks,
+    mobileMenuOpen,
+    searchOpen,
+    setMobileMenuOpen,
+    setSearchOpen,
+    toggleTheme,
+    handleLogout,
+    handleSignIn,
+  } = useNavbar();
 
   const [mounted, setMounted] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [searchOpen, setSearchOpen] = useState(false);
-
-  const toggleTheme = () => {
-    setTheme(theme === "dark" ? "light" : "dark");
-  };
-
-  const navLinks = user
-    ? [
-        { href: "/dashboard", label: "Feed", icon: BookOpen },
-        { href: "/explore", label: "Explore", icon: Compass },
-        { href: "/create", label: "Write", icon: PenLine },
-        { href: "/journal", label: "Journal", icon: BookOpen },
-      ]
-    : [{ href: "/explore", label: "Explore", icon: Compass }];
-
-  // HANDLE LOGOUT SUPABASE
-  const handleLogout = async () => {
-    await signOut({ callbackUrl: "/" });
-  };
+  useEffect(() => setMounted(true), []);
+  const router = useRouter();
 
   return (
     <>
@@ -63,7 +46,7 @@ export function Navbar() {
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
             <Link
-              href={user ? "/dashboard" : "/"}
+              href={user ? "/" : "/"}
               className="flex items-center gap-2 group"
             >
               <Mountain className="h-7 w-7 text-primary transition-transform group-hover:scale-110" />
@@ -73,7 +56,7 @@ export function Navbar() {
             </Link>
 
             {/* Desktop Nav */}
-            {!isDashboard && !isProfile && (
+            {!isProfile && (
               <div className="hidden md:flex items-center gap-1">
                 {navLinks.map((link) => (
                   <Link
