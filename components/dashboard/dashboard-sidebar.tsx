@@ -1,8 +1,9 @@
 "use client";
 
-import Link from "next/link";
-import Image from "next/image";
+import { useSession } from "next-auth/react";
 import { motion } from "framer-motion";
+import Image from "next/image";
+import Link from "next/link";
 import {
   PenLine,
   BookOpen,
@@ -15,17 +16,14 @@ import {
   ArrowRight,
 } from "lucide-react";
 
-interface DashboardSidebarProps {
-  userName: string;
-  userImage?: string | null;
-  username?: string;
-}
+export function DashboardSidebar() {
+  const { data: session } = useSession();
 
-export function DashboardSidebar({
-  userName,
-  userImage,
-  username,
-}: DashboardSidebarProps) {
+  const user = session?.user;
+  const username = session?.user?.username;
+  const userName = user?.name || "Pendaki";
+  const userImage = user?.image;
+
   return (
     <aside className="w-full lg:w-72 flex-shrink-0 order-2 lg:order-1">
       <div className="lg:sticky lg:top-24 space-y-6">
@@ -36,30 +34,32 @@ export function DashboardSidebar({
           transition={{ duration: 0.5 }}
           className="glass rounded-2xl p-6"
         >
-          <Link
-            href={username ? `/profile/${username}` : "#"}
-            className="flex items-center gap-3 mb-4 group"
-          >
-            {userImage ? (
-              <Image
-                src={userImage}
-                alt={userName}
-                width={48}
-                height={48}
-                className="rounded-full object-cover ring-2 ring-primary/20 group-hover:ring-primary/40 transition"
-              />
-            ) : (
-              <div className="h-12 w-12 rounded-full bg-primary/20 flex items-center justify-center">
-                <User className="h-6 w-6 text-primary" />
+          {username && (
+            <Link
+              href={`/profile/${username}`}
+              className="flex items-center gap-3 mb-4 group"
+            >
+              {userImage ? (
+                <Image
+                  src={userImage}
+                  alt={userName}
+                  width={48}
+                  height={48}
+                  className="rounded-full object-cover ring-2 ring-primary/20 group-hover:ring-primary/40 transition"
+                />
+              ) : (
+                <div className="h-12 w-12 rounded-full bg-primary/20 flex items-center justify-center">
+                  <User className="h-6 w-6 text-primary" />
+                </div>
+              )}
+              <div>
+                <p className="text-sm text-muted-foreground">Selamat datang</p>
+                <p className="text-lg font-semibold text-foreground group-hover:text-primary transition">
+                  {userName}
+                </p>
               </div>
-            )}
-            <div>
-              <p className="text-sm text-muted-foreground">Selamat datang</p>
-              <p className="text-lg font-semibold text-foreground group-hover:text-primary transition">
-                {userName}
-              </p>
-            </div>
-          </Link>
+            </Link>
+          )}
 
           {/* Quick actions */}
           <div className="space-y-2">

@@ -16,7 +16,7 @@ export type SortTab = "terbaru" | "populer" | "trending";
 
 export function useDashboard() {
   const router = useRouter();
-  const { data: session } = useSession(); // ✅ pakai NextAuth
+  const { data: session, status } = useSession();
 
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
@@ -24,18 +24,21 @@ export function useDashboard() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<SortTab>("terbaru");
 
-  // ✅ AUTH (lebih cepat)
+  // ✅ AUTH
   useEffect(() => {
     if (DEV_BYPASS_AUTH) return;
+
+    if (status === "loading") return;
 
     if (session?.user) {
       setUser(session.user);
     } else {
       setUser(null);
+      setLoading(false);
     }
-  }, [session]);
+  }, [session, status]);
 
-  // ✅ FETCH PROFILE + STORIES PARALEL
+  // ✅ FETCH PROFILE + STORIES
   useEffect(() => {
     if (!DEV_BYPASS_AUTH && !user) return;
 
@@ -43,39 +46,59 @@ export function useDashboard() {
       setLoading(true);
 
       try {
-        const userId = user?.id;
+        const userEmail = user?.email;
 
-        const [profileRes, storiesRes] = await Promise.all([
-          // PROFILE
-          supabase.from("profiles").select("*").eq("id", userId).single(),
+        // 🔥 PROFILE (pakai maybeSingle biar tidak error)
+        let { data: profileData } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("email", userEmail)
+          .maybeSingle();
 
-          // STORIES (lebih ringan)
-          supabase
-            .from("stories")
-            .select(
-              `
-              id, title, slug, excerpt, likes_count, created_at,
-              profiles:user_id (name, username),
-              trails:trail_id (name),
-              story_images (image_url)
-            `,
-            )
-            .eq("is_private", false)
-            .eq("is_draft", false)
-            .order(activeTab === "terbaru" ? "created_at" : "likes_count", {
-              ascending: false,
+        // 🔥 AUTO CREATE PROFILE kalau belum ada
+        if (!profileData) {
+          const { data: newProfile, error: insertError } = await supabase
+            .from("profiles")
+            .insert({
+              email: userEmail,
+              username: userEmail?.split("@")[0],
+              name: user?.name,
+              image: user?.image,
             })
-            .limit(20),
-        ]);
+            .select()
+            .maybeSingle();
 
-        // PROFILE
-        if (profileRes.data) {
-          setProfile(profileRes.data);
+          if (insertError) {
+            console.error("Insert profile error:", insertError);
+          } else {
+            profileData = newProfile;
+          }
         }
 
-        // STORIES
-        if (storiesRes.data) {
-          setStories(storiesRes.data);
+        setProfile(profileData);
+
+        // 🔥 STORIES
+        const { data: storiesData, error: storiesError } = await supabase
+          .from("stories")
+          .select(
+            `
+            id, title, slug, excerpt, likes_count, created_at,
+            profiles:user_id (name, username),
+            trails:trail_id (name),
+            story_images (image_url)
+          `,
+          )
+          .eq("is_private", false)
+          .eq("is_draft", false)
+          .order(activeTab === "terbaru" ? "created_at" : "likes_count", {
+            ascending: false,
+          })
+          .limit(20);
+
+        if (storiesError) {
+          console.error("Stories error:", storiesError);
+        } else {
+          setStories(storiesData || []);
         }
       } catch (err) {
         console.error("Dashboard error:", err);

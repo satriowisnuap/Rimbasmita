@@ -31,7 +31,7 @@ export function Navbar() {
   const pathname = usePathname();
   const isDashboard = pathname.startsWith("/dashboard");
   const isProfile = pathname.startsWith("/profile");
-  const { username } = useDashboard();
+  const username = session?.user?.username;
   const user = session?.user;
 
   const [mounted, setMounted] = useState(false);
@@ -125,9 +125,9 @@ export function Navbar() {
                   </Link>
 
                   {/* Profile */}
-                  {user && username && !isProfile && !isDashboard && (
+                  {user && username && !isProfile && (
                     <Link
-                      href={`/profile/${username}`}
+                      href={`/profile/${username || ""}`}
                       className="flex items-center gap-2 px-2 py-1.5 rounded-xl hover:bg-accent/50 transition-all duration-300"
                     >
                       {user?.image ? (

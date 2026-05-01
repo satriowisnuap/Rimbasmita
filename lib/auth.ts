@@ -6,6 +6,16 @@ export const authOptions: NextAuthOptions = {
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID || "",
       clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
+
+      // 🔥 FIX PALING PENTING (mapping id dari Google)
+      profile(profile) {
+        return {
+          id: profile.sub, // ✅ WAJIB
+          name: profile.name,
+          email: profile.email,
+          image: profile.picture,
+        };
+      },
     }),
   ],
 
@@ -19,22 +29,29 @@ export const authOptions: NextAuthOptions = {
 
   callbacks: {
     async jwt({ token, user }) {
-      // ⚠️ Jangan asumsi user.id selalu ada
+      // 🔥 Saat login pertama
       if (user) {
         token.id = user.id ?? token.sub ?? null;
+
+        // username fallback dari email
+        token.username = user.email?.split("@")[0] || token.username || "user";
       }
+
       return token;
     },
 
     async session({ session, token }) {
-      // ⚠️ Pastikan user ada dulu
       if (session.user) {
+        // ✅ inject id ke session
         (session.user as any).id = token.id ?? null;
+
+        // ✅ inject username
+        (session.user as any).username = token.username ?? null;
       }
+
       return session;
     },
   },
 
-  // 🔥 Tambahan penting biar lebih stabil
   secret: process.env.NEXTAUTH_SECRET,
 };
