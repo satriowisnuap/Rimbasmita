@@ -32,33 +32,11 @@ export function Navbar() {
   const isDashboard = pathname.startsWith("/dashboard");
   const isProfile = pathname.startsWith("/profile");
   const { username } = useDashboard();
+  const user = session?.user;
 
   const [mounted, setMounted] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
-  const [user, setUser] = useState<any>(null);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  // CEK USER SUPABASE
-  useEffect(() => {
-    const getUser = async () => {
-      const { data } = await supabase.auth.getUser();
-      setUser(data.user);
-    };
-
-    getUser();
-
-    const { data: listener } = supabase.auth.onAuthStateChange((_, session) => {
-      setUser(session?.user ?? null);
-    });
-
-    return () => {
-      listener.subscription.unsubscribe();
-    };
-  }, []);
 
   const toggleTheme = () => {
     setTheme(theme === "dark" ? "light" : "dark");
@@ -75,8 +53,7 @@ export function Navbar() {
 
   // HANDLE LOGOUT SUPABASE
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    router.push("/");
+    await signOut({ callbackUrl: "/" });
   };
 
   return (
@@ -153,10 +130,10 @@ export function Navbar() {
                       href={`/profile/${username}`}
                       className="flex items-center gap-2 px-2 py-1.5 rounded-xl hover:bg-accent/50 transition-all duration-300"
                     >
-                      {user.user_metadata?.avatar_url ? (
+                      {user?.image ? (
                         <Image
-                          src={user.user_metadata.avatar_url}
-                          alt={user.user_metadata?.name || ""}
+                          src={user.image}
+                          alt={user.name || ""}
                           width={28}
                           height={28}
                           className="rounded-full object-cover ring-2 ring-primary/20"
@@ -178,7 +155,7 @@ export function Navbar() {
                 </>
               ) : (
                 <button
-                  onClick={() => signIn("google")}
+                  onClick={() => router.push("/auth/signin")}
                   className="px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-all duration-300"
                 >
                   Masuk

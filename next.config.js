@@ -6,7 +6,8 @@ const nextConfig = {
   images: {
     domains: [
       "lh3.googleusercontent.com", // Google avatar
-      "nevejzwlbmhgwoytrgek.supabase.co", // Supabase storage 
+      "nevejzwlbmhgwoytrgek.supabase.co", // Supabase storage
+      "images.pexels.com", // Pexels images
     ],
   },
 };

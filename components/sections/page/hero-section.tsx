@@ -11,6 +11,7 @@ import {
   ArrowRight,
   Compass,
 } from "lucide-react";
+import Image from "next/image";
 
 export default function HeroSection() {
   const { data: session } = useSession();
@@ -18,11 +19,13 @@ export default function HeroSection() {
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
       <div className="absolute inset-0">
-        {/* <img
-          src="https://images.pexels.com/photos/1670765/pexels-photo-1670765.jpeg?auto=compress&cs=tinysrgb&w=1920"
+        <Image
+          src="/asset/images/hero-background.jpg"
           alt="Mountain landscape"
-          className="w-full h-full object-cover"
-        /> */}
+          fill
+          priority
+          className="object-cover"
+        />
         <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-background/40 to-background" />
       </div>
 

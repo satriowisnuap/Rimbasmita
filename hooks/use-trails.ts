@@ -1,38 +1,50 @@
-import { useState, useEffect } from "react";
+"use client";
+
+import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 
-interface Trail {
+export interface Trail {
   id: string;
   name: string;
-  location?: string;
+  location: string;
+  elevation: number;
+  image?: string | null;
 }
 
-export function useTrails() {
+export function useTrails(limit = 6) {
   const [trails, setTrails] = useState<Trail[]>([]);
-  const [loadingTrails, setLoadingTrails] = useState(true);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function fetchTrails() {
-      try {
-        const { data, error } = await supabase
-          .from("trails")
-          .select("id, name, location")
-          .order("name");
+    const fetchTrails = async () => {
+      setLoading(true);
 
-        if (error) {
-          console.error("Error fetching trails:", error);
-        } else {
-          setTrails(data || []);
-        }
-      } catch (err) {
-        console.error("Error fetching trails:", err);
-      } finally {
-        setLoadingTrails(false);
+      const { data, error } = await supabase
+        .from("trails")
+        .select("*")
+        .limit(limit);
+
+      if (error) {
+        console.error("Error fetching trails:", error);
+        setTrails([]);
+      } else {
+        // 🔥 sanitize data biar aman untuk <Image />
+        const cleaned = (data || []).map((t: any) => ({
+          id: t.id,
+          name: t.name,
+          location: t.location,
+          elevation: t.elevation,
+          image: typeof t.image === "string" ? t.image.trim() : null,
+        }));
+
+        setTrails(cleaned);
       }
-    }
+
+      setLoading(false);
+    };
 
     fetchTrails();
-  }, []);
+  }, [limit]);
 
-  return { trails, loadingTrails };
+  return { trails, loading };
 }

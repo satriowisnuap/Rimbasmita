@@ -1,6 +1,8 @@
-import { useState, useEffect } from "react";
+"use client";
+
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase";
+import { signIn } from "next-auth/react";
 
 export function useSignIn() {
   const [email, setEmail] = useState("");
@@ -8,48 +10,48 @@ export function useSignIn() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  // Cek session (penting untuk Google login)
-  useEffect(() => {
-    const { data: listener } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        if (session) {
-          router.push("/dashboard");
-        }
-      },
-    );
-
-    return () => {
-      listener.subscription.unsubscribe();
-    };
-  }, [router]);
-
+  // 🔐 LOGIN CREDENTIALS
   const handleLogin = async () => {
+    if (loading) return; // ⛔ prevent double click
     setLoading(true);
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    try {
+      const res = await signIn("credentials", {
+        redirect: false,
+        email,
+        password,
+        callbackUrl: "/dashboard",
+      });
 
-    if (error) {
-      alert(error.message);
-    } else {
-      router.push("/dashboard");
+      if (res?.error) {
+        alert(res.error);
+        setLoading(false);
+        return;
+      }
+
+      // ✅ redirect manual (karena redirect: false)
+      router.push(res?.url || "/dashboard");
+    } catch (err) {
+      console.error("Login error:", err);
+      alert("Terjadi kesalahan saat login");
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
+  // 🔥 LOGIN GOOGLE
   const handleGoogleLogin = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: "http://localhost:3000/dashboard",
-      },
-    });
+    if (loading) return;
+    setLoading(true);
 
-    if (error) {
-      alert(error.message);
+    try {
+      // ❗ NextAuth otomatis redirect → jangan pakai router.push
+      await signIn("google", {
+        callbackUrl: "/dashboard",
+      });
+    } catch (err) {
+      console.error("Google login error:", err);
+      alert("Gagal login dengan Google");
+      setLoading(false);
     }
   };
 
