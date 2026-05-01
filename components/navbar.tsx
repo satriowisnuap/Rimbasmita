@@ -29,6 +29,7 @@ export function Navbar() {
   const router = useRouter();
   const pathname = usePathname();
   const isDashboard = pathname === "/dashboard";
+  const isProfile = pathname.includes("/profile/");
 
   const [mounted, setMounted] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -94,7 +95,7 @@ export function Navbar() {
             </Link>
 
             {/* Desktop Nav */}
-            {!isDashboard && (
+            {!isDashboard && !isProfile && (
               <div className="hidden md:flex items-center gap-1">
                 {navLinks.map((link) => (
                   <Link
@@ -112,7 +113,7 @@ export function Navbar() {
             {/* Right side */}
             <div className="flex items-center gap-2">
               {/* Search */}
-              {!isDashboard && (
+              {!isDashboard && !isProfile && (
                 <button
                   onClick={() => setSearchOpen(true)}
                   className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-all duration-300"
@@ -146,24 +147,26 @@ export function Navbar() {
                   </Link>
 
                   {/* Profile */}
-                  <Link
-                    href={`/profile/${user?.user_metadata?.username || "me"}`}
-                    className="flex items-center gap-2 px-2 py-1.5 rounded-xl hover:bg-accent/50 transition-all duration-300"
-                  >
-                    {user?.user_metadata?.avatar_url ? (
-                      <Image
-                        src={user.user_metadata.avatar_url}
-                        alt={user.user_metadata.name || ""}
-                        width={28}
-                        height={28}
-                        className="rounded-full object-cover ring-2 ring-primary/20"
-                      />
-                    ) : (
-                      <div className="h-7 w-7 rounded-full bg-primary/20 flex items-center justify-center">
-                        <User className="h-4 w-4 text-primary" />
-                      </div>
-                    )}
-                  </Link>
+                  {user && !isProfile && (
+                    <Link
+                      href={`/profile/${user.email?.split("@")[0]}`}
+                      className="flex items-center gap-2 px-2 py-1.5 rounded-xl hover:bg-accent/50 transition-all duration-300"
+                    >
+                      {user.user_metadata?.avatar_url ? (
+                        <Image
+                          src={user.user_metadata.avatar_url}
+                          alt={user.user_metadata?.name || ""}
+                          width={28}
+                          height={28}
+                          className="rounded-full object-cover ring-2 ring-primary/20"
+                        />
+                      ) : (
+                        <div className="h-7 w-7 rounded-full bg-primary/20 flex items-center justify-center">
+                          <User className="h-4 w-4 text-primary" />
+                        </div>
+                      )}
+                    </Link>
+                  )}
 
                   <button
                     onClick={handleLogout}
