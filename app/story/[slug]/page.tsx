@@ -1,280 +1,64 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useCallback } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import { useSession } from 'next-auth/react';
-import Link from 'next/link';
-import { motion } from 'framer-motion';
-import { formatDistanceToNow } from 'date-fns';
-import { id as idLocale } from 'date-fns/locale';
-import { Heart, Bookmark, MessageCircle, ArrowUp, MapPin, Clock, Smile, Tag, Lightbulb, TriangleAlert as AlertTriangle, ChevronLeft, Send, User, Image as ImageIcon } from 'lucide-react';
-import { Navbar } from '@/components/navbar';
-import { Footer } from '@/components/footer';
-import { supabase } from '@/lib/supabase';
-
-interface StoryImage {
-  id: string;
-  image_url: string;
-  caption?: string;
-}
-
-interface StoryTag {
-  id: string;
-  tag: string;
-}
-
-interface Profile {
-  id: string;
-  name: string;
-  username: string;
-  image?: string;
-}
-
-interface Trail {
-  id: string;
-  name: string;
-  location: string;
-  elevation: number;
-}
-
-interface Story {
-  id: string;
-  slug: string;
-  title: string;
-  content: string;
-  difficulty: string;
-  duration: string;
-  mood: string;
-  tips: string;
-  warnings: string;
-  likes_count: number;
-  bookmarks_count: number;
-  comments_count: number;
-  created_at: string;
-  user_id: string;
-  trail_id: string;
-  profiles: Profile;
-  trails: Trail;
-  story_images: StoryImage[];
-  story_tags: StoryTag[];
-}
-
-interface Comment {
-  id: string;
-  content: string;
-  created_at: string;
-  user_id: string;
-  profiles: {
-    name: string;
-    username: string;
-    image?: string;
-  };
-}
+import Link from "next/link";
+import { motion } from "framer-motion";
+import {
+  Heart,
+  Bookmark,
+  MessageCircle,
+  ArrowUp,
+  MapPin,
+  Clock,
+  Smile,
+  Tag,
+  Lightbulb,
+  TriangleAlert as AlertTriangle,
+  ChevronLeft,
+  Send,
+  User,
+  Image as ImageIcon,
+} from "lucide-react";
+import { Navbar } from "@/components/navbar";
+import { Footer } from "@/components/footer";
+import {
+  useStoryDetail,
+  difficultyColor,
+  moodEmoji,
+} from "@/hooks/story/use-story-detail";
 
 const fadeInUp = {
   initial: { opacity: 0, y: 24 },
   animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.5, ease: 'easeOut' as const },
+  transition: { duration: 0.5, ease: "easeOut" as const },
 };
 
 const staggerContainer = {
   animate: { transition: { staggerChildren: 0.08 } },
 };
 
-const difficultyColor: Record<string, string> = {
-  easy: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
-  moderate: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
-  hard: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
-  extreme: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
-};
-
-const moodEmoji: Record<string, string> = {
-  peaceful: 'Serene',
-  adventurous: 'Adventurous',
-  reflective: 'Reflective',
-  exhilarated: 'Exhilarated',
-  grateful: 'Grateful',
-  challenged: 'Challenged',
-};
-
 export default function StoryDetailPage() {
-  const params = useParams();
-  const router = useRouter();
-  const { data: session } = useSession();
-
-  const [story, setStory] = useState<Story | null>(null);
-  const [comments, setComments] = useState<Comment[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [isLiked, setIsLiked] = useState(false);
-  const [isBookmarked, setIsBookmarked] = useState(false);
-  const [likesCount, setLikesCount] = useState(0);
-  const [bookmarksCount, setBookmarksCount] = useState(0);
-  const [commentText, setCommentText] = useState('');
-  const [submittingComment, setSubmittingComment] = useState(false);
-  const [galleryIndex, setGalleryIndex] = useState(0);
-
-  const slug = params.slug as string;
-
-  const fetchStory = useCallback(async () => {
-    try {
-      const { data, error } = await supabase
-        .from('stories')
-        .select('*, profiles:user_id(*), trails:trail_id(*), story_images(*), story_tags(*)')
-        .eq('slug', slug)
-        .single();
-
-      if (error || !data) {
-        setLoading(false);
-        return;
-      }
-
-      setStory(data);
-      setLikesCount(data.likes_count || 0);
-      setBookmarksCount(data.bookmarks_count || 0);
-
-      // Fetch comments
-      const { data: commentsData } = await supabase
-        .from('comments')
-        .select('*, profiles:user_id(name, username, image)')
-        .eq('story_id', data.id)
-        .order('created_at');
-
-      if (commentsData) {
-        setComments(commentsData);
-      }
-
-      // Check like and bookmark status if user is logged in
-      if (session?.user) {
-        const userId = (session.user as any).id;
-
-        const { data: likeData } = await supabase
-          .from('likes')
-          .select('id')
-          .eq('story_id', data.id)
-          .eq('user_id', userId)
-          .maybeSingle();
-
-        setIsLiked(!!likeData);
-
-        const { data: bookmarkData } = await supabase
-          .from('bookmarks')
-          .select('id')
-          .eq('story_id', data.id)
-          .eq('user_id', userId)
-          .maybeSingle();
-
-        setIsBookmarked(!!bookmarkData);
-      }
-    } catch {
-      // Silently handle fetch errors
-    } finally {
-      setLoading(false);
-    }
-  }, [slug, session]);
-
-  useEffect(() => {
-    fetchStory();
-  }, [fetchStory]);
-
-  const handleLikeToggle = async () => {
-    if (!session?.user || !story) return;
-    const userId = (session.user as any).id;
-
-    try {
-      if (isLiked) {
-        await supabase
-          .from('likes')
-          .delete()
-          .eq('story_id', story.id)
-          .eq('user_id', userId);
-        setLikesCount((c) => Math.max(0, c - 1));
-      } else {
-        await supabase.from('likes').insert({ story_id: story.id, user_id: userId });
-        setLikesCount((c) => c + 1);
-      }
-
-      await supabase
-        .from('stories')
-        .update({ likes_count: isLiked ? Math.max(0, likesCount - 1) : likesCount + 1 })
-        .eq('id', story.id);
-
-      setIsLiked(!isLiked);
-    } catch {
-      // Silently handle errors
-    }
-  };
-
-  const handleBookmarkToggle = async () => {
-    if (!session?.user || !story) return;
-    const userId = (session.user as any).id;
-
-    try {
-      if (isBookmarked) {
-        await supabase
-          .from('bookmarks')
-          .delete()
-          .eq('story_id', story.id)
-          .eq('user_id', userId);
-        setBookmarksCount((c) => Math.max(0, c - 1));
-      } else {
-        await supabase.from('bookmarks').insert({ story_id: story.id, user_id: userId });
-        setBookmarksCount((c) => c + 1);
-      }
-
-      await supabase
-        .from('stories')
-        .update({ bookmarks_count: isBookmarked ? Math.max(0, bookmarksCount - 1) : bookmarksCount + 1 })
-        .eq('id', story.id);
-
-      setIsBookmarked(!isBookmarked);
-    } catch {
-      // Silently handle errors
-    }
-  };
-
-  const handleCommentSubmit = async () => {
-    if (!session?.user || !story || !commentText.trim()) return;
-    const userId = (session.user as any).id;
-
-    setSubmittingComment(true);
-    try {
-      const { data: newComment } = await supabase
-        .from('comments')
-        .insert({
-          story_id: story.id,
-          user_id: userId,
-          content: commentText.trim(),
-        })
-        .select('*, profiles:user_id(name, username, image)')
-        .single();
-
-      if (newComment) {
-        setComments((prev) => [...prev, newComment]);
-        const newCount = (story.comments_count || 0) + 1;
-        await supabase
-          .from('stories')
-          .update({ comments_count: newCount })
-          .eq('id', story.id);
-        setStory((prev) => prev ? { ...prev, comments_count: newCount } : prev);
-        setCommentText('');
-      }
-    } catch {
-      // Silently handle errors
-    } finally {
-      setSubmittingComment(false);
-    }
-  };
-
-  const formatTime = (dateStr: string) => {
-    try {
-      return formatDistanceToNow(new Date(dateStr), { addSuffix: true, locale: idLocale });
-    } catch {
-      return '';
-    }
-  };
-
-  const coverImage = story?.story_images?.[0]?.image_url || null;
-  const galleryImages = story?.story_images?.slice(1) || [];
+  const {
+    story,
+    comments,
+    loading,
+    isLiked,
+    isBookmarked,
+    likesCount,
+    bookmarksCount,
+    commentText,
+    setCommentText,
+    submittingComment,
+    galleryIndex,
+    setGalleryIndex,
+    coverImage,
+    galleryImages,
+    session,
+    handleLikeToggle,
+    handleBookmarkToggle,
+    handleCommentSubmit,
+    formatTime,
+    handleBack,
+  } = useStoryDetail();
 
   // Loading state
   if (loading) {
@@ -299,10 +83,14 @@ export default function StoryDetailPage() {
         <Navbar />
         <div className="pt-24 pb-16 flex items-center justify-center min-h-[60vh]">
           <div className="text-center">
-            <h2 className="text-2xl font-bold text-foreground mb-2">Cerita tidak ditemukan</h2>
-            <p className="text-muted-foreground mb-6">Cerita yang kamu cari mungkin telah dihapus atau tidak tersedia.</p>
+            <h2 className="text-2xl font-bold text-foreground mb-2">
+              Cerita tidak ditemukan
+            </h2>
+            <p className="text-muted-foreground mb-6">
+              Cerita yang kamu cari mungkin telah dihapus atau tidak tersedia.
+            </p>
             <button
-              onClick={() => router.back()}
+              onClick={handleBack}
               className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl glass font-medium text-foreground hover:bg-accent/50 transition-all duration-300"
             >
               <ChevronLeft className="h-4 w-4" />
@@ -326,11 +114,10 @@ export default function StoryDetailPage() {
         className="pt-20 pb-16"
       >
         <div className="max-w-4xl mx-auto px-4 sm:px-6">
-
           {/* Back button */}
           <motion.div variants={fadeInUp} className="mb-6">
             <button
-              onClick={() => router.back()}
+              onClick={handleBack}
               className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               <ChevronLeft className="h-4 w-4" />
@@ -340,7 +127,10 @@ export default function StoryDetailPage() {
 
           {/* Cover Image */}
           {coverImage && (
-            <motion.div variants={fadeInUp} className="mb-8 rounded-2xl overflow-hidden relative">
+            <motion.div
+              variants={fadeInUp}
+              className="mb-8 rounded-2xl overflow-hidden relative"
+            >
               <img
                 src={coverImage}
                 alt={story.title}
@@ -359,7 +149,10 @@ export default function StoryDetailPage() {
           </motion.h1>
 
           {/* Author Info */}
-          <motion.div variants={fadeInUp} className="flex items-center gap-3 mb-6">
+          <motion.div
+            variants={fadeInUp}
+            className="flex items-center gap-3 mb-6"
+          >
             {story.profiles?.image ? (
               <img
                 src={story.profiles.image}
@@ -373,10 +166,10 @@ export default function StoryDetailPage() {
             )}
             <div>
               <Link
-                href={`/profile/${story.profiles?.username || 'me'}`}
+                href={`/profile/${story.profiles?.username || "me"}`}
                 className="text-sm font-semibold text-foreground hover:text-primary transition-colors"
               >
-                {story.profiles?.name || 'Anonim'}
+                {story.profiles?.name || "Anonim"}
               </Link>
               <p className="text-xs text-muted-foreground">
                 {formatTime(story.created_at)}
@@ -386,7 +179,10 @@ export default function StoryDetailPage() {
 
           {/* Trail Info */}
           {story.trails && (
-            <motion.div variants={fadeInUp} className="glass rounded-2xl p-5 mb-6">
+            <motion.div
+              variants={fadeInUp}
+              className="glass rounded-2xl p-5 mb-6"
+            >
               <div className="flex flex-wrap items-center gap-4 text-sm">
                 <div className="flex items-center gap-1.5 text-foreground font-medium">
                   <MapPin className="h-4 w-4 text-primary" />
@@ -408,11 +204,17 @@ export default function StoryDetailPage() {
           )}
 
           {/* Metadata Badges */}
-          <motion.div variants={fadeInUp} className="flex flex-wrap items-center gap-2 mb-8">
+          <motion.div
+            variants={fadeInUp}
+            className="flex flex-wrap items-center gap-2 mb-8"
+          >
             {story.difficulty && (
-              <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium ${difficultyColor[story.difficulty] || 'bg-muted text-muted-foreground'}`}>
+              <span
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium ${difficultyColor[story.difficulty] || "bg-muted text-muted-foreground"}`}
+              >
                 <Smile className="h-3.5 w-3.5" />
-                {story.difficulty.charAt(0).toUpperCase() + story.difficulty.slice(1)}
+                {story.difficulty.charAt(0).toUpperCase() +
+                  story.difficulty.slice(1)}
               </span>
             )}
             {story.duration && (
@@ -431,7 +233,10 @@ export default function StoryDetailPage() {
 
           {/* Tags */}
           {story.story_tags && story.story_tags.length > 0 && (
-            <motion.div variants={fadeInUp} className="flex flex-wrap items-center gap-2 mb-8">
+            <motion.div
+              variants={fadeInUp}
+              className="flex flex-wrap items-center gap-2 mb-8"
+            >
               <Tag className="h-4 w-4 text-muted-foreground" />
               {story.story_tags.map((tag) => (
                 <span
@@ -446,19 +251,22 @@ export default function StoryDetailPage() {
 
           {/* Content */}
           <motion.div variants={fadeInUp} className="mb-10">
-            <div
-              className="text-foreground/90 text-base sm:text-lg leading-relaxed whitespace-pre-wrap"
-            >
+            <div className="text-foreground/90 text-base sm:text-lg leading-relaxed whitespace-pre-wrap">
               {story.content}
             </div>
           </motion.div>
 
           {/* Tips Section */}
-          {story.tips && story.tips.trim() !== '' && (
-            <motion.div variants={fadeInUp} className="glass rounded-2xl p-6 mb-6">
+          {story.tips && story.tips.trim() !== "" && (
+            <motion.div
+              variants={fadeInUp}
+              className="glass rounded-2xl p-6 mb-6"
+            >
               <div className="flex items-center gap-2 mb-3">
                 <Lightbulb className="h-5 w-5 text-amber-500" />
-                <h3 className="text-base font-semibold text-foreground">Tips</h3>
+                <h3 className="text-base font-semibold text-foreground">
+                  Tips
+                </h3>
               </div>
               <div className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
                 {story.tips}
@@ -467,11 +275,16 @@ export default function StoryDetailPage() {
           )}
 
           {/* Warnings Section */}
-          {story.warnings && story.warnings.trim() !== '' && (
-            <motion.div variants={fadeInUp} className="glass rounded-2xl p-6 mb-6 border border-amber-500/20">
+          {story.warnings && story.warnings.trim() !== "" && (
+            <motion.div
+              variants={fadeInUp}
+              className="glass rounded-2xl p-6 mb-6 border border-amber-500/20"
+            >
               <div className="flex items-center gap-2 mb-3">
                 <AlertTriangle className="h-5 w-5 text-amber-500" />
-                <h3 className="text-base font-semibold text-foreground">Peringatan</h3>
+                <h3 className="text-base font-semibold text-foreground">
+                  Peringatan
+                </h3>
               </div>
               <div className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
                 {story.warnings}
@@ -484,14 +297,19 @@ export default function StoryDetailPage() {
             <motion.div variants={fadeInUp} className="mb-10">
               <div className="flex items-center gap-2 mb-4">
                 <ImageIcon className="h-5 w-5 text-primary" />
-                <h3 className="text-base font-semibold text-foreground">Galeri</h3>
+                <h3 className="text-base font-semibold text-foreground">
+                  Galeri
+                </h3>
               </div>
 
               {/* Main gallery image */}
               <div className="rounded-2xl overflow-hidden mb-3">
                 <img
                   src={galleryImages[galleryIndex]?.image_url}
-                  alt={galleryImages[galleryIndex]?.caption || `Foto ${galleryIndex + 1}`}
+                  alt={
+                    galleryImages[galleryIndex]?.caption ||
+                    `Foto ${galleryIndex + 1}`
+                  }
                   className="w-full h-64 sm:h-80 object-cover"
                 />
                 {galleryImages[galleryIndex]?.caption && (
@@ -510,8 +328,8 @@ export default function StoryDetailPage() {
                       onClick={() => setGalleryIndex(idx)}
                       className={`flex-shrink-0 w-20 h-20 rounded-xl overflow-hidden ring-2 transition-all duration-200 ${
                         idx === galleryIndex
-                          ? 'ring-primary opacity-100'
-                          : 'ring-transparent opacity-60 hover:opacity-90'
+                          ? "ring-primary opacity-100"
+                          : "ring-transparent opacity-60 hover:opacity-90"
                       }`}
                     >
                       <img
@@ -541,11 +359,13 @@ export default function StoryDetailPage() {
                 <Heart
                   className={`h-5 w-5 transition-all duration-200 ${
                     isLiked
-                      ? 'fill-red-500 text-red-500 scale-110'
-                      : 'text-muted-foreground group-hover:text-red-400'
+                      ? "fill-red-500 text-red-500 scale-110"
+                      : "text-muted-foreground group-hover:text-red-400"
                   }`}
                 />
-                <span className={`text-sm font-medium ${isLiked ? 'text-red-500' : 'text-muted-foreground'}`}>
+                <span
+                  className={`text-sm font-medium ${isLiked ? "text-red-500" : "text-muted-foreground"}`}
+                >
                   {likesCount}
                 </span>
               </button>
@@ -559,11 +379,13 @@ export default function StoryDetailPage() {
                 <Bookmark
                   className={`h-5 w-5 transition-all duration-200 ${
                     isBookmarked
-                      ? 'fill-primary text-primary scale-110'
-                      : 'text-muted-foreground group-hover:text-primary'
+                      ? "fill-primary text-primary scale-110"
+                      : "text-muted-foreground group-hover:text-primary"
                   }`}
                 />
-                <span className={`text-sm font-medium ${isBookmarked ? 'text-primary' : 'text-muted-foreground'}`}>
+                <span
+                  className={`text-sm font-medium ${isBookmarked ? "text-primary" : "text-muted-foreground"}`}
+                >
                   {bookmarksCount}
                 </span>
               </button>
@@ -572,7 +394,9 @@ export default function StoryDetailPage() {
             {/* Comment Count */}
             <div className="flex items-center gap-1.5 text-muted-foreground">
               <MessageCircle className="h-5 w-5" />
-              <span className="text-sm font-medium">{story.comments_count || comments.length}</span>
+              <span className="text-sm font-medium">
+                {story.comments_count || comments.length}
+              </span>
             </div>
           </motion.div>
 
@@ -602,7 +426,7 @@ export default function StoryDetailPage() {
                     className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     <Send className="h-3.5 w-3.5" />
-                    {submittingComment ? 'Mengirim...' : 'Kirim'}
+                    {submittingComment ? "Mengirim..." : "Kirim"}
                   </button>
                 </div>
               </div>
@@ -639,10 +463,10 @@ export default function StoryDetailPage() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         <Link
-                          href={`/profile/${comment.profiles?.username || 'me'}`}
+                          href={`/profile/${comment.profiles?.username || "me"}`}
                           className="text-sm font-semibold text-foreground hover:text-primary transition-colors"
                         >
-                          {comment.profiles?.name || 'Anonim'}
+                          {comment.profiles?.name || "Anonim"}
                         </Link>
                         <span className="text-xs text-muted-foreground">
                           {formatTime(comment.created_at)}
@@ -657,7 +481,6 @@ export default function StoryDetailPage() {
               ))}
             </div>
           </motion.div>
-
         </div>
       </motion.main>
 
