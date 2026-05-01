@@ -1,10 +1,36 @@
-'use client';
+"use client";
 
-import { signIn } from 'next-auth/react';
-import { motion } from 'framer-motion';
-import { Mountain, CloudFog, TreePine } from 'lucide-react';
+import { signIn } from "next-auth/react";
+import { motion } from "framer-motion";
+import { Mountain, CloudFog, TreePine } from "lucide-react";
+import { useState } from "react";
+import { supabase } from "@/lib/supabase";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 export default function SignInPage() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+
+  const handleLogin = async () => {
+    setLoading(true);
+
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      alert(error.message);
+    } else {
+      router.push("/dashboard");
+    }
+
+    setLoading(false);
+  };
+
   return (
     <div className="min-h-screen bg-background flex items-center justify-center relative overflow-hidden">
       {/* Background mountain imagery */}
@@ -62,7 +88,11 @@ export default function SignInPage() {
         {/* Animated floating elements */}
         <motion.div
           animate={{ y: [0, -10, 0] }}
-          transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' as const }}
+          transition={{
+            duration: 6,
+            repeat: Infinity,
+            ease: "easeInOut" as const,
+          }}
           className="absolute top-[35%] left-[20%] opacity-[0.04]"
         >
           <Mountain className="h-32 w-32 text-primary" />
@@ -70,7 +100,12 @@ export default function SignInPage() {
 
         <motion.div
           animate={{ y: [0, -8, 0] }}
-          transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' as const, delay: 1 }}
+          transition={{
+            duration: 5,
+            repeat: Infinity,
+            ease: "easeInOut" as const,
+            delay: 1,
+          }}
           className="absolute top-[40%] right-[25%] opacity-[0.03]"
         >
           <Mountain className="h-24 w-24 text-primary" />
@@ -82,14 +117,14 @@ export default function SignInPage() {
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: 'easeOut' as const }}
+          transition={{ duration: 0.8, ease: "easeOut" as const }}
           className="glass-strong rounded-3xl p-8 sm:p-10 text-center"
         >
           {/* Logo */}
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.6, delay: 0.2, ease: 'easeOut' as const }}
+            transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" as const }}
             className="flex items-center justify-center gap-3 mb-6"
           >
             <Mountain className="h-10 w-10 text-primary" />
@@ -102,7 +137,7 @@ export default function SignInPage() {
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3, ease: 'easeOut' as const }}
+            transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" as const }}
             className="text-xl sm:text-2xl font-bold text-foreground mb-3"
           >
             <span className="text-gradient">Setiap langkah punya cerita</span>
@@ -112,7 +147,7 @@ export default function SignInPage() {
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.4, ease: 'easeOut' as const }}
+            transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" as const }}
             className="text-sm text-muted-foreground leading-relaxed mb-8 max-w-xs mx-auto"
           >
             Bergabung dengan komunitas pendaki yang berbagi cerita bermakna.
@@ -120,7 +155,7 @@ export default function SignInPage() {
           </motion.p>
 
           {/* Divider */}
-          <motion.div
+          {/* <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.4, delay: 0.5 }}
@@ -129,16 +164,50 @@ export default function SignInPage() {
             <div className="flex-1 h-px bg-border" />
             <Mountain className="h-4 w-4 text-muted-foreground/40" />
             <div className="flex-1 h-px bg-border" />
-          </motion.div>
+          </motion.div> */}
+
+          {/* Manual Login Form */}
+          <div className="space-y-3">
+            <input
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full px-4 py-3 rounded-xl glass bg-transparent text-sm outline-none"
+            />
+
+            <input
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full px-4 py-3 rounded-xl glass bg-transparent text-sm outline-none"
+            />
+
+            <button
+              onClick={handleLogin}
+              disabled={loading}
+              className="w-full px-6 py-3 rounded-xl bg-primary text-primary-foreground font-medium text-sm hover:bg-primary/90 transition"
+            >
+              {loading ? "Memproses..." : "Masuk"}
+            </button>
+          </div>
+
+          {/* Divider atau */}
+          <div className="flex items-center gap-3 my-6">
+            <div className="flex-1 h-px bg-border" />
+            <span className="text-xs text-muted-foreground">atau</span>
+            <div className="flex-1 h-px bg-border" />
+          </div>
 
           {/* Google Sign In Button */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.6, ease: 'easeOut' as const }}
+            transition={{ duration: 0.6, delay: 0.6, ease: "easeOut" as const }}
           >
             <button
-              onClick={() => signIn('google', { callbackUrl: '/dashboard' })}
+              onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
               className="w-full flex items-center justify-center gap-3 px-6 py-3.5 rounded-2xl glass font-medium text-foreground hover:bg-accent/50 transition-all duration-300 group hover:shadow-lg hover:shadow-primary/5"
             >
               <svg className="h-5 w-5" viewBox="0 0 24 24">
@@ -163,6 +232,17 @@ export default function SignInPage() {
             </button>
           </motion.div>
 
+          {/* Register link */}
+          <p className="text-xs text-muted-foreground mt-4">
+            Belum punya akun?{" "}
+            <Link
+              href="/auth/register"
+              className="text-primary hover:underline"
+            >
+              Daftar
+            </Link>
+          </p>
+
           {/* Footer note */}
           <motion.p
             initial={{ opacity: 0 }}
@@ -170,7 +250,8 @@ export default function SignInPage() {
             transition={{ duration: 0.4, delay: 0.8 }}
             className="text-xs text-muted-foreground/60 mt-6 leading-relaxed"
           >
-            Dengan masuk, kamu menyetujui ketentuan layanan dan kebijakan privasi Rimbasmita.
+            Dengan masuk, kamu menyetujui ketentuan layanan dan kebijakan
+            privasi Rimbasmita.
           </motion.p>
         </motion.div>
 
