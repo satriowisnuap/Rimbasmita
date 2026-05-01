@@ -1,0 +1,120 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 40 33% 97%;
+    --foreground: 150 10% 12%;
+    --card: 40 30% 95%;
+    --card-foreground: 150 10% 12%;
+    --popover: 40 30% 95%;
+    --popover-foreground: 150 10% 12%;
+    --primary: 150 40% 28%;
+    --primary-foreground: 40 33% 97%;
+    --secondary: 40 20% 90%;
+    --secondary-foreground: 150 10% 20%;
+    --muted: 40 15% 92%;
+    --muted-foreground: 150 8% 42%;
+    --accent: 150 30% 88%;
+    --accent-foreground: 150 40% 20%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 40 15% 88%;
+    --input: 40 15% 88%;
+    --ring: 150 40% 28%;
+    --radius: 1rem;
+    --chart-1: 150 40% 35%;
+    --chart-2: 35 60% 50%;
+    --chart-3: 20 50% 45%;
+    --chart-4: 150 25% 55%;
+    --chart-5: 40 45% 50%;
+    --glass-bg: rgba(255, 253, 248, 0.7);
+    --glass-border: rgba(150, 140, 120, 0.15);
+    --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+  }
+
+  .dark {
+    --background: 150 15% 6%;
+    --foreground: 40 20% 92%;
+    --card: 150 12% 9%;
+    --card-foreground: 40 20% 92%;
+    --popover: 150 12% 9%;
+    --popover-foreground: 40 20% 92%;
+    --primary: 150 45% 42%;
+    --primary-foreground: 150 15% 6%;
+    --secondary: 150 10% 14%;
+    --secondary-foreground: 40 20% 88%;
+    --muted: 150 8% 14%;
+    --muted-foreground: 40 12% 55%;
+    --accent: 150 12% 16%;
+    --accent-foreground: 150 40% 65%;
+    --destructive: 0 62% 30%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 150 8% 16%;
+    --input: 150 8% 16%;
+    --ring: 150 45% 42%;
+    --chart-1: 150 45% 50%;
+    --chart-2: 35 55% 55%;
+    --chart-3: 20 50% 50%;
+    --chart-4: 150 30% 60%;
+    --chart-5: 40 40% 55%;
+    --glass-bg: rgba(15, 25, 20, 0.7);
+    --glass-border: rgba(80, 120, 100, 0.12);
+    --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+@layer utilities {
+  .glass {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+  }
+
+  .glass-strong {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+  }
+
+  .text-gradient {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, hsl(var(--primary)), hsl(150 30% 55%));
+  }
+}
+
+html {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.3);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.5);
+}
