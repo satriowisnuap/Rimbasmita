@@ -57,6 +57,7 @@ export interface UseDashboardReturn {
   setActiveTab: (tab: SortTab) => void;
   userName: string;
   userImage: string | null | undefined;
+  username?: string; //
   isDevMode: boolean;
 }
 
@@ -64,6 +65,7 @@ export function useDashboard(): UseDashboardReturn {
   const router = useRouter();
 
   const [user, setUser] = useState<any>(null);
+  const [profile, setProfile] = useState<any>(null); //
   const [stories, setStories] = useState<Story[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<SortTab>("terbaru");
@@ -83,7 +85,7 @@ export function useDashboard(): UseDashboardReturn {
         router.push("/auth/signin");
       }
 
-      setLoading(false); // ✅ penting biar tidak stuck loading
+      setLoading(false);
     };
 
     getSession();
@@ -98,6 +100,39 @@ export function useDashboard(): UseDashboardReturn {
       listener.subscription.unsubscribe();
     };
   }, [router]);
+
+  // ambil / buat profile otomatis
+  useEffect(() => {
+    if (!user) return;
+
+    const getProfile = async () => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", user.id)
+        .single();
+
+      if (data) {
+        setProfile(data);
+      } else {
+        // 🔥 auto create profile kalau belum ada
+        const { data: newProfile } = await supabase
+          .from("profiles")
+          .insert({
+            id: user.id,
+            username: user.email?.split("@")[0],
+            name: user.user_metadata?.name,
+            image: user.user_metadata?.avatar_url,
+          })
+          .select()
+          .single();
+
+        setProfile(newProfile);
+      }
+    };
+
+    getProfile();
+  }, [user]);
 
   // Fetch stories
   useEffect(() => {
@@ -152,6 +187,8 @@ export function useDashboard(): UseDashboardReturn {
     ? DEV_USER.image
     : user?.user_metadata?.avatar_url;
 
+  const username = profile?.username; //
+
   return {
     user,
     stories,
@@ -160,6 +197,7 @@ export function useDashboard(): UseDashboardReturn {
     setActiveTab,
     userName,
     userImage,
+    username, //
     isDevMode: DEV_BYPASS_AUTH,
   };
 }

@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useRouter, usePathname } from "next/navigation";
+import { useDashboard } from "@/hooks/use-dashboard";
 
 export function Navbar() {
   const { data: session } = useSession();
@@ -30,11 +31,11 @@ export function Navbar() {
   const pathname = usePathname();
   const isDashboard = pathname.startsWith("/dashboard");
   const isProfile = pathname.startsWith("/profile");
+  const { username } = useDashboard();
 
   const [mounted, setMounted] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
-
   const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
@@ -147,9 +148,9 @@ export function Navbar() {
                   </Link>
 
                   {/* Profile */}
-                  {user && !isProfile && !isDashboard && (
+                  {user && username && !isProfile && isDashboard && (
                     <Link
-                      href={`/profile/${user.email?.split("@")[0]}`}
+                      href={`/profile/${username}`}
                       className="flex items-center gap-2 px-2 py-1.5 rounded-xl hover:bg-accent/50 transition-all duration-300"
                     >
                       {user.user_metadata?.avatar_url ? (

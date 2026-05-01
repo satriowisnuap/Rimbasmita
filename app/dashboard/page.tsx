@@ -16,6 +16,7 @@ export default function DashboardPage() {
     userName,
     userImage,
     isDevMode,
+    username,
   } = useDashboard();
 
   if (!isDevMode && !user) {
@@ -44,7 +45,11 @@ export default function DashboardPage() {
       <main className="pt-24 pb-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col lg:flex-row gap-8">
-            <DashboardSidebar userName={userName} userImage={userImage} />
+            <DashboardSidebar
+              userName={userName}
+              userImage={userImage}
+              username={username}
+            />
             <DashboardFeed
               stories={stories}
               loading={loading}

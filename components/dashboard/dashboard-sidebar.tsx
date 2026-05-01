@@ -18,11 +18,13 @@ import {
 interface DashboardSidebarProps {
   userName: string;
   userImage?: string | null;
+  username?: string;
 }
 
 export function DashboardSidebar({
   userName,
   userImage,
+  username,
 }: DashboardSidebarProps) {
   return (
     <aside className="w-full lg:w-72 flex-shrink-0 order-2 lg:order-1">
@@ -34,14 +36,17 @@ export function DashboardSidebar({
           transition={{ duration: 0.5 }}
           className="glass rounded-2xl p-6"
         >
-          <div className="flex items-center gap-3 mb-4">
+          <Link
+            href={username ? `/profile/${username}` : "#"}
+            className="flex items-center gap-3 mb-4 group"
+          >
             {userImage ? (
               <Image
                 src={userImage}
                 alt={userName}
                 width={48}
                 height={48}
-                className="rounded-full object-cover ring-2 ring-primary/20"
+                className="rounded-full object-cover ring-2 ring-primary/20 group-hover:ring-primary/40 transition"
               />
             ) : (
               <div className="h-12 w-12 rounded-full bg-primary/20 flex items-center justify-center">
@@ -50,11 +55,11 @@ export function DashboardSidebar({
             )}
             <div>
               <p className="text-sm text-muted-foreground">Selamat datang</p>
-              <p className="text-lg font-semibold text-foreground">
+              <p className="text-lg font-semibold text-foreground group-hover:text-primary transition">
                 {userName}
               </p>
             </div>
-          </div>
+          </Link>
 
           {/* Quick actions */}
           <div className="space-y-2">
