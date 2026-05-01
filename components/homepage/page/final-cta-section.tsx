@@ -1,11 +1,13 @@
 "use client";
 
+import { Mountain, PenLine, ArrowRight } from "lucide-react";
+import { useSession, signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { useSession, signIn } from "next-auth/react";
-import { Mountain, PenLine, ArrowRight } from "lucide-react";
 
 export default function FinalCTASection() {
+  const router = useRouter();
   const { data: session } = useSession();
 
   return (
@@ -42,13 +44,13 @@ export default function FinalCTASection() {
                 <PenLine className="h-4 w-4" />
               </Link>
             ) : (
-              <button
-                onClick={() => signIn("google")}
+              <Link
+                href="/auth/signin"
                 className="inline-flex items-center gap-2 px-8 py-3.5 rounded-2xl bg-primary text-primary-foreground font-semibold text-base hover:bg-primary/90 transition-all duration-300 hover:shadow-lg hover:shadow-primary/20"
               >
                 Bergabung Sekarang
                 <ArrowRight className="h-4 w-4" />
-              </button>
+              </Link>
             )}
           </div>
         </motion.div>
