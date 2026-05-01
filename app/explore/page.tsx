@@ -3,8 +3,8 @@
 import { useState, useEffect, useMemo } from "react";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
-import { ExploreHero } from "@/components/sections/explore/explore-hero-section";
-import { ExploreTrailsGrid } from "@/components/sections/explore/explore-trails-grid-section";
+import { ExploreHero } from "@/components/homepage/explore/explore-hero-section";
+import { ExploreTrailsGrid } from "@/components/homepage/explore/explore-trails-grid-section";
 import { supabase } from "@/lib/supabase";
 
 interface Trail {
