@@ -28,8 +28,8 @@ export function Navbar() {
   const { theme, setTheme } = useTheme();
   const router = useRouter();
   const pathname = usePathname();
-  const isDashboard = pathname === "/dashboard";
-  const isProfile = pathname.includes("/profile/");
+  const isDashboard = pathname.startsWith("/dashboard");
+  const isProfile = pathname.startsWith("/profile");
 
   const [mounted, setMounted] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -72,7 +72,7 @@ export function Navbar() {
       ]
     : [{ href: "/explore", label: "Explore", icon: Compass }];
 
-  // ✅ HANDLE LOGOUT SUPABASE
+  // HANDLE LOGOUT SUPABASE
   const handleLogout = async () => {
     await supabase.auth.signOut();
     router.push("/");
@@ -147,7 +147,7 @@ export function Navbar() {
                   </Link>
 
                   {/* Profile */}
-                  {user && !isProfile && (
+                  {user && !isProfile && !isDashboard && (
                     <Link
                       href={`/profile/${user.email?.split("@")[0]}`}
                       className="flex items-center gap-2 px-2 py-1.5 rounded-xl hover:bg-accent/50 transition-all duration-300"
