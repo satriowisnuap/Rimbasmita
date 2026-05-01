@@ -1,10 +1,11 @@
-'use client';
+"use client";
 
-import { useSession, signIn, signOut } from 'next-auth/react';
-import { useTheme } from 'next-themes';
-import Link from 'next/link';
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useSession, signIn, signOut } from "next-auth/react";
+import { motion, AnimatePresence } from "framer-motion";
+import { useState, useEffect } from "react";
+import { useTheme } from "next-themes";
+import Image from "next/image";
+import Link from "next/link";
 import {
   Mountain,
   Sun,
@@ -18,33 +19,63 @@ import {
   LogOut,
   Menu,
   X,
-} from 'lucide-react';
+} from "lucide-react";
+import { supabase } from "@/lib/supabase";
+import { useRouter, usePathname } from "next/navigation";
 
 export function Navbar() {
   const { data: session } = useSession();
   const { theme, setTheme } = useTheme();
+  const router = useRouter();
+  const pathname = usePathname();
+  const isDashboard = pathname === "/dashboard";
+
   const [mounted, setMounted] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+
+  const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
+  // CEK USER SUPABASE
+  useEffect(() => {
+    const getUser = async () => {
+      const { data } = await supabase.auth.getUser();
+      setUser(data.user);
+    };
+
+    getUser();
+
+    const { data: listener } = supabase.auth.onAuthStateChange((_, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => {
+      listener.subscription.unsubscribe();
+    };
+  }, []);
+
   const toggleTheme = () => {
-    setTheme(theme === 'dark' ? 'light' : 'dark');
+    setTheme(theme === "dark" ? "light" : "dark");
   };
 
-  const navLinks = session
+  const navLinks = user
     ? [
-        { href: '/dashboard', label: 'Feed', icon: BookOpen },
-        { href: '/explore', label: 'Explore', icon: Compass },
-        { href: '/create', label: 'Write', icon: PenLine },
-        { href: '/journal', label: 'Journal', icon: BookOpen },
+        { href: "/dashboard", label: "Feed", icon: BookOpen },
+        { href: "/explore", label: "Explore", icon: Compass },
+        { href: "/create", label: "Write", icon: PenLine },
+        { href: "/journal", label: "Journal", icon: BookOpen },
       ]
-    : [
-        { href: '/explore', label: 'Explore', icon: Compass },
-      ];
+    : [{ href: "/explore", label: "Explore", icon: Compass }];
+
+  // ✅ HANDLE LOGOUT SUPABASE
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.push("/");
+  };
 
   return (
     <>
@@ -52,7 +83,10 @@ export function Navbar() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
-            <Link href={session ? '/dashboard' : '/'} className="flex items-center gap-2 group">
+            <Link
+              href={user ? "/dashboard" : "/"}
+              className="flex items-center gap-2 group"
+            >
               <Mountain className="h-7 w-7 text-primary transition-transform group-hover:scale-110" />
               <span className="text-lg font-bold tracking-tight text-foreground">
                 Rimbasmita
@@ -60,28 +94,32 @@ export function Navbar() {
             </Link>
 
             {/* Desktop Nav */}
-            <div className="hidden md:flex items-center gap-1">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-all duration-300"
-                >
-                  <link.icon className="h-4 w-4" />
-                  {link.label}
-                </Link>
-              ))}
-            </div>
+            {!isDashboard && (
+              <div className="hidden md:flex items-center gap-1">
+                {navLinks.map((link) => (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-all duration-300"
+                  >
+                    <link.icon className="h-4 w-4" />
+                    {link.label}
+                  </Link>
+                ))}
+              </div>
+            )}
 
             {/* Right side */}
             <div className="flex items-center gap-2">
               {/* Search */}
-              <button
-                onClick={() => setSearchOpen(true)}
-                className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-all duration-300"
-              >
-                <Search className="h-5 w-5" />
-              </button>
+              {!isDashboard && (
+                <button
+                  onClick={() => setSearchOpen(true)}
+                  className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-all duration-300"
+                >
+                  <Search className="h-5 w-5" />
+                </button>
+              )}
 
               {/* Theme toggle */}
               {mounted && (
@@ -89,7 +127,7 @@ export function Navbar() {
                   onClick={toggleTheme}
                   className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-all duration-300"
                 >
-                  {theme === 'dark' ? (
+                  {theme === "dark" ? (
                     <Sun className="h-5 w-5" />
                   ) : (
                     <Moon className="h-5 w-5" />
@@ -97,7 +135,7 @@ export function Navbar() {
                 </button>
               )}
 
-              {session ? (
+              {user ? (
                 <>
                   {/* Notifications */}
                   <Link
@@ -109,14 +147,16 @@ export function Navbar() {
 
                   {/* Profile */}
                   <Link
-                    href={`/profile/${(session.user as any)?.username || 'me'}`}
+                    href={`/profile/${user?.user_metadata?.username || "me"}`}
                     className="flex items-center gap-2 px-2 py-1.5 rounded-xl hover:bg-accent/50 transition-all duration-300"
                   >
-                    {session.user?.image ? (
-                      <img
-                        src={session.user.image}
-                        alt={session.user.name || ''}
-                        className="h-7 w-7 rounded-full object-cover ring-2 ring-primary/20"
+                    {user?.user_metadata?.avatar_url ? (
+                      <Image
+                        src={user.user_metadata.avatar_url}
+                        alt={user.user_metadata.name || ""}
+                        width={28}
+                        height={28}
+                        className="rounded-full object-cover ring-2 ring-primary/20"
                       />
                     ) : (
                       <div className="h-7 w-7 rounded-full bg-primary/20 flex items-center justify-center">
@@ -126,7 +166,7 @@ export function Navbar() {
                   </Link>
 
                   <button
-                    onClick={() => signOut()}
+                    onClick={handleLogout}
                     className="hidden md:flex p-2 rounded-xl text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all duration-300"
                   >
                     <LogOut className="h-5 w-5" />
@@ -134,7 +174,7 @@ export function Navbar() {
                 </>
               ) : (
                 <button
-                  onClick={() => signIn('google')}
+                  onClick={() => signIn("google")}
                   className="px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-all duration-300"
                 >
                   Masuk
@@ -146,7 +186,11 @@ export function Navbar() {
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                 className="md:hidden p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-all duration-300"
               >
-                {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+                {mobileMenuOpen ? (
+                  <X className="h-5 w-5" />
+                ) : (
+                  <Menu className="h-5 w-5" />
+                )}
               </button>
             </div>
           </div>
@@ -175,9 +219,12 @@ export function Navbar() {
                   {link.label}
                 </Link>
               ))}
-              {session && (
+              {user && (
                 <button
-                  onClick={() => { signOut(); setMobileMenuOpen(false); }}
+                  onClick={() => {
+                    handleLogout();
+                    setMobileMenuOpen(false);
+                  }}
                   className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium text-destructive hover:bg-destructive/10 transition-all w-full"
                 >
                   <LogOut className="h-4 w-4" />
@@ -199,7 +246,10 @@ export function Navbar() {
             className="fixed inset-0 z-[60] bg-background/80 backdrop-blur-sm"
             onClick={() => setSearchOpen(false)}
           >
-            <div className="max-w-2xl mx-auto pt-24 px-4" onClick={(e) => e.stopPropagation()}>
+            <div
+              className="max-w-2xl mx-auto pt-24 px-4"
+              onClick={(e) => e.stopPropagation()}
+            >
               <div className="glass rounded-2xl p-4">
                 <div className="flex items-center gap-3">
                   <Search className="h-5 w-5 text-muted-foreground" />
@@ -209,12 +259,17 @@ export function Navbar() {
                     className="flex-1 bg-transparent text-foreground placeholder:text-muted-foreground outline-none text-lg"
                     autoFocus
                   />
-                  <button onClick={() => setSearchOpen(false)} className="text-muted-foreground hover:text-foreground">
+                  <button
+                    onClick={() => setSearchOpen(false)}
+                    className="text-muted-foreground hover:text-foreground"
+                  >
                     <X className="h-5 w-5" />
                   </button>
                 </div>
                 <div className="mt-4 pt-4 border-t border-border">
-                  <p className="text-sm text-muted-foreground">Ketik untuk mulai mencari...</p>
+                  <p className="text-sm text-muted-foreground">
+                    Ketik untuk mulai mencari...
+                  </p>
                 </div>
               </div>
             </div>

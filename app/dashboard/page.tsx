@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Mountain } from "lucide-react";
 import { Navbar } from "@/components/navbar";
@@ -14,7 +13,7 @@ import { supabase } from "@/lib/supabase";
 // DEV FLAG — set true untuk bypass auth
 // Ganti ke false sebelum deploy ke production
 // ─────────────────────────────────────────────
-const DEV_BYPASS_AUTH = true;
+const DEV_BYPASS_AUTH = false;
 
 const DEV_USER = {
   name: "Developer",
@@ -55,25 +54,47 @@ interface Story {
 }
 
 export default function DashboardPage() {
-  const { data: session, status } = useSession();
   const router = useRouter();
 
+  const [user, setUser] = useState<any>(null);
   const [stories, setStories] = useState<Story[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<SortTab>("terbaru");
 
-  // Auth guard — dilewati kalau DEV_BYPASS_AUTH aktif
+  // ✅ Auth guard pakai Supabase
   useEffect(() => {
     if (DEV_BYPASS_AUTH) return;
-    if (status === "unauthenticated") {
-      router.push("/");
-    }
-  }, [status, router]);
+
+    const getSession = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (user) {
+        setUser(user);
+      } else {
+        router.push("/auth/signin");
+      }
+
+      setLoading(false); // ✅ penting biar tidak stuck loading
+    };
+
+    getSession();
+
+    const { data: listener } = supabase.auth.onAuthStateChange((_, session) => {
+      if (session?.user) {
+        setUser(session.user);
+      }
+    });
+
+    return () => {
+      listener.subscription.unsubscribe();
+    };
+  }, [router]);
 
   // Fetch stories
   useEffect(() => {
-    // Kalau dev bypass aktif, langsung fetch tanpa cek auth
-    if (!DEV_BYPASS_AUTH && status !== "authenticated") return;
+    if (!DEV_BYPASS_AUTH && !user) return;
 
     const fetchStories = async () => {
       setLoading(true);
@@ -113,10 +134,10 @@ export default function DashboardPage() {
     };
 
     fetchStories();
-  }, [status, activeTab]);
+  }, [user, activeTab]);
 
-  // Loading state — dilewati kalau dev bypass aktif
-  if (!DEV_BYPASS_AUTH && status === "loading") {
+  // Loading state (tetap aman)
+  if (!DEV_BYPASS_AUTH && !user) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
@@ -127,16 +148,14 @@ export default function DashboardPage() {
     );
   }
 
-  if (!DEV_BYPASS_AUTH && !session) return null;
-
-  // Gunakan data session asli atau mock dev
+  // Gunakan data Supabase atau dev
   const userName = DEV_BYPASS_AUTH
     ? DEV_USER.name
-    : (session?.user as any)?.name || "Pendaki";
+    : user?.user_metadata?.name || "Pendaki";
 
   const userImage = DEV_BYPASS_AUTH
     ? DEV_USER.image
-    : (session?.user as any)?.image;
+    : user?.user_metadata?.avatar_url;
 
   return (
     <div className="min-h-screen bg-background">

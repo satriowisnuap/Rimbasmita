@@ -3,7 +3,7 @@
 import { signIn } from "next-auth/react";
 import { motion } from "framer-motion";
 import { Mountain, CloudFog, TreePine } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -13,6 +13,21 @@ export default function SignInPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+
+  // CEK SESSION (penting untuk Google login)
+  useEffect(() => {
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        if (session) {
+          router.push("/dashboard");
+        }
+      },
+    );
+
+    return () => {
+      listener.subscription.unsubscribe();
+    };
+  }, [router]);
 
   const handleLogin = async () => {
     setLoading(true);
@@ -29,6 +44,20 @@ export default function SignInPage() {
     }
 
     setLoading(false);
+  };
+
+  // ✅ PERBAIKAN GOOGLE LOGIN
+  const handleGoogleLogin = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: "http://localhost:3000/dashboard", // 🔥 jangan langsung ke /dashboard
+      },
+    });
+
+    if (error) {
+      alert(error.message);
+    }
   };
 
   return (
@@ -207,7 +236,7 @@ export default function SignInPage() {
             transition={{ duration: 0.6, delay: 0.6, ease: "easeOut" as const }}
           >
             <button
-              onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
+              onClick={handleGoogleLogin}
               className="w-full flex items-center justify-center gap-3 px-6 py-3.5 rounded-2xl glass font-medium text-foreground hover:bg-accent/50 transition-all duration-300 group hover:shadow-lg hover:shadow-primary/5"
             >
               <svg className="h-5 w-5" viewBox="0 0 24 24">

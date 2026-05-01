@@ -70,7 +70,7 @@ export default function TrailsSection({ fadeInUp, stagger }: any) {
                       </span>
                       <span className="flex items-center gap-1">
                         <ArrowUp className="h-3.5 w-3.5" />
-                        {trail.elevation.toLocaleString()} mdpl
+                        {trail.elevation.toLocaleString("id-ID")} mdpl
                       </span>
                     </div>
                   </div>
