@@ -5,9 +5,13 @@ import { useTrails } from "@/hooks/use-trails";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
+import { useState } from "react";
 
 export default function TrailsSection({ fadeInUp, stagger }: any) {
   const { trails, loading } = useTrails(6);
+
+  // ✅ state untuk semua image
+  const [loadedImages, setLoadedImages] = useState<Record<string, boolean>>({});
 
   if (loading) return null;
 
@@ -48,48 +52,64 @@ export default function TrailsSection({ fadeInUp, stagger }: any) {
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {trails.map((trail, i) => (
-            <motion.div
-              key={trail.id}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: i * 0.1 }}
-            >
-              <div className="glass rounded-2xl overflow-hidden group cursor-pointer">
-                <div className="relative h-56 overflow-hidden">
-                  {trail.image && (
-                    <Image
-                      src={trail.image}
-                      alt={trail.name}
-                      fill
-                      className="object-cover transition-transform duration-500 group-hover:scale-105"
-                    />
-                  )}
+          {trails.map((trail, i) => {
+            const isLoaded = loadedImages[trail.id];
 
-                  <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
+            return (
+              <motion.div
+                key={trail.id}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: i * 0.1 }}
+              >
+                <div className="glass rounded-2xl overflow-hidden group cursor-pointer">
+                  <div className="relative h-56 overflow-hidden">
+                    {/* ✅ SKELETON */}
+                    {!isLoaded && (
+                      <div className="absolute inset-0 animate-pulse bg-muted" />
+                    )}
 
-                  <div className="absolute bottom-4 left-4 right-4"></div>
-                  <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
-                  <div className="absolute bottom-4 left-4 right-4">
-                    <h3 className="text-xl font-bold text-foreground">
-                      {trail.name}
-                    </h3>
-                    <div className="flex items-center gap-3 mt-1 text-sm text-foreground/70">
-                      <span className="flex items-center gap-1">
-                        <MapPin className="h-3.5 w-3.5" />
-                        {trail.location}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <ArrowUp className="h-3.5 w-3.5" />
-                        {trail.elevation.toLocaleString("id-ID")} mdpl
-                      </span>
+                    {/* ✅ IMAGE */}
+                    {trail.image && (
+                      <Image
+                        src={trail.image}
+                        alt={trail.name}
+                        fill
+                        onLoad={() =>
+                          setLoadedImages((prev) => ({
+                            ...prev,
+                            [trail.id]: true,
+                          }))
+                        }
+                        className={`object-cover transition-all duration-500 group-hover:scale-105 ${
+                          isLoaded ? "opacity-100" : "opacity-0"
+                        }`}
+                      />
+                    )}
+
+                    <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
+
+                    <div className="absolute bottom-4 left-4 right-4">
+                      <h3 className="text-xl font-bold text-foreground">
+                        {trail.name}
+                      </h3>
+                      <div className="flex items-center gap-3 mt-1 text-sm text-foreground/70">
+                        <span className="flex items-center gap-1">
+                          <MapPin className="h-3.5 w-3.5" />
+                          {trail.location}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <ArrowUp className="h-3.5 w-3.5" />
+                          {trail.elevation.toLocaleString("id-ID")} mdpl
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            </motion.div>
-          ))}
+              </motion.div>
+            );
+          })}
         </div>
 
         <div className="text-center mt-10">
