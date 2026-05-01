@@ -148,7 +148,7 @@ export function Navbar() {
                   </Link>
 
                   {/* Profile */}
-                  {user && username && !isProfile && isDashboard && (
+                  {user && username && !isProfile && !isDashboard && (
                     <Link
                       href={`/profile/${username}`}
                       className="flex items-center gap-2 px-2 py-1.5 rounded-xl hover:bg-accent/50 transition-all duration-300"
