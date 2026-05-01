@@ -1,10 +1,10 @@
 "use client";
 
-import HeroSection from "@/components/sections/hero-section";
-import FeaturesSection from "@/components/sections/features-section";
-import TrailsSection from "@/components/sections/trails-section";
-import TestimonialsSection from "@/components/sections/testimonials-section";
-import FinalCTASection from "@/components/sections/final-cta-section";
+import HeroSection from "@/components/sections/page/hero-section";
+import FeaturesSection from "@/components/sections/page/features-section";
+import TrailsSection from "@/components/sections/page/trails-section";
+import TestimonialsSection from "@/components/sections/page/testimonials-section";
+import FinalCTASection from "@/components/sections/page/final-cta-section";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 
