@@ -22,7 +22,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useRouter, usePathname } from "next/navigation";
-import { useDashboard } from "@/hooks/use-dashboard";
+import { useDashboard } from "@/hooks/dashboard/use-dashboard";
 
 export function Navbar() {
   const { data: session } = useSession();

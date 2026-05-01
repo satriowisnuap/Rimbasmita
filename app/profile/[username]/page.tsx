@@ -4,7 +4,7 @@ import { Mountain, User } from "lucide-react";
 import { motion } from "framer-motion";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
-import { useProfile } from "@/hooks/use-profile";
+import { useProfile } from "@/hooks/profile/use-profile";
 import { ProfileHeader } from "@/components/profile/profile-header";
 import { ProfileTabs } from "@/components/profile/profile-tabs";
 import { ProfileStories } from "@/components/profile/profile-stories";

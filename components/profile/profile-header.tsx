@@ -10,7 +10,7 @@ import {
   Users,
   Loader as Loader2,
 } from "lucide-react";
-import type { Profile } from "@/hooks/use-profile";
+import type { Profile } from "@/hooks/profile/use-profile";
 
 interface ProfileHeaderProps {
   profile: Profile;

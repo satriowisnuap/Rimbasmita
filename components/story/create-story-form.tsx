@@ -1,11 +1,11 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useCreateStoryForm } from "@/hooks/use-create-story-form";
+import { useCreateStoryForm } from "@/hooks/story/use-create-story-form";
 import { useTrails } from "@/hooks/use-trails";
-import { useTagManager } from "@/hooks/use-tag-manager";
-import { useImageManager } from "@/hooks/use-image-manager";
-import { useSubmitStory } from "@/hooks/use-submit-story";
+import { useTagManager } from "@/hooks/story/use-tag-manager";
+import { useImageManager } from "@/hooks/story/use-image-manager";
+import { useSubmitStory } from "@/hooks/story/use-submit-story";
 import { ErrorBanner } from "@/components/error-banner";
 import { TitleSection } from "@/components/story/title-section";
 import { TrailDifficultySection } from "@/components/story/trail-difficult-section";

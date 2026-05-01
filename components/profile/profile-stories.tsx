@@ -3,7 +3,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { BookOpen, Bookmark, Mountain } from "lucide-react";
 import { StoryCard, StoryCardSkeleton } from "@/components/story-card";
-import type { Story, ProfileTab } from "@/hooks/use-profile";
+import type { Story, ProfileTab } from "@/hooks/profile/use-profile";
 
 const containerVariants = {
   hidden: { opacity: 0 },

@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { BookOpen, Bookmark } from "lucide-react";
-import type { ProfileTab } from "@/hooks/use-profile";
+import type { ProfileTab } from "@/hooks/profile/use-profile";
 
 interface ProfileTabsProps {
   activeTab: ProfileTab;

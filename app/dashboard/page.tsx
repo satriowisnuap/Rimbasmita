@@ -4,7 +4,7 @@ import { Mountain } from "lucide-react";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { DashboardSidebar, DashboardFeed } from "@/components/dashboard";
-import { useDashboard } from "@/hooks/use-dashboard";
+import { useDashboard } from "@/hooks/dashboard/use-dashboard";
 
 export default function DashboardPage() {
   const {
