@@ -2,6 +2,7 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { ImagePlus, Plus, X } from "lucide-react";
+import Image from "next/image";
 
 interface Props {
   imageUrls: string[];
@@ -123,15 +124,20 @@ export function ImageSection({
                 exit={{ opacity: 0, scale: 0.9 }}
                 className="relative group rounded-xl overflow-hidden border border-border aspect-video"
               >
-                <img
-                  src={url}
-                  alt="Story image"
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = "";
-                    (e.target as HTMLImageElement).alt = "Failed to load";
-                  }}
-                />
+                <div className="relative w-full h-full bg-muted animate-pulse">
+                  <Image
+                    src={url || "/fallback.jpg"}
+                    alt="Story image"
+                    fill
+                    sizes="(max-width: 768px) 100vw, 50vw"
+                    className="object-cover"
+                    onError={(e) => {
+                      // optional fallback kalau gagal load
+                      const img = e.target as HTMLImageElement;
+                      img.src = "/fallback.jpg";
+                    }}
+                  />
+                </div>
                 <button
                   type="button"
                   onClick={() => removeImage(url)}
