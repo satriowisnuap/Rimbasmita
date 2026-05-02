@@ -53,16 +53,24 @@ export default function FeaturesSection({ fadeInUp, stagger }: any) {
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: i * 0.1 }}
               >
-                <div className="glass rounded-2xl p-6 h-full hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 group">
-                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
-                    <Icon className="h-6 w-6 text-primary" />
+                <div className="relative rounded-2xl p-6 h-full overflow-hidden border border-primary/10 bg-gradient-to-br from-primary/5 via-transparent to-primary/10 backdrop-blur-md transition-all duration-500 group hover:-translate-y-1 hover:shadow-xl hover:shadow-green-500/10">
+                  {/* 🌿 Aura glow */}
+                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-[radial-gradient(circle_at_top,rgba(34,197,94,0.15),transparent_70%)]" />
+
+                  {/* ✨ Content */}
+                  <div className="relative z-10">
+                    <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
+                      <Icon className="h-6 w-6 text-primary" />
+                    </div>
+
+                    <h3 className="text-lg font-semibold text-foreground mb-2">
+                      {feature.title}
+                    </h3>
+
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      {feature.description}
+                    </p>
                   </div>
-                  <h3 className="text-lg font-semibold text-foreground mb-2">
-                    {feature.title}
-                  </h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    {feature.description}
-                  </p>
                 </div>
               </motion.div>
             );
