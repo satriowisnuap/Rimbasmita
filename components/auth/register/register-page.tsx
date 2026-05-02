@@ -6,7 +6,7 @@ import { RegisterCard } from "./register-card";
 
 // 🔥 tambah ini
 import { Toast } from "@/components/toast";
-import { useToast } from "@/components/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 
 export function RegisterPage() {
   // 🔥 ambil toast state + showToast
