@@ -4,11 +4,19 @@ import { Mountain, PenLine, ArrowRight } from "lucide-react";
 import { useSession, signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import Link from "next/link";
 
 export default function FinalCTASection() {
   const router = useRouter();
   const { data: session } = useSession();
+
+  const handleClick = () => {
+    if (session) {
+      router.push("/create");
+    } else {
+      // arahkan ke halaman signin + simpan tujuan
+      signIn(undefined, { callbackUrl: "/create" });
+    }
+  };
 
   return (
     <section className="py-24 px-4">
@@ -35,23 +43,17 @@ export default function FinalCTASection() {
               dikenang dan dibagikan.
             </p>
 
-            {session ? (
-              <Link
-                href="/create"
-                className="inline-flex items-center gap-2 px-8 py-3.5 rounded-2xl bg-primary text-primary-foreground font-semibold text-base hover:bg-primary/90 transition-all duration-300 hover:shadow-lg hover:shadow-primary/20"
-              >
-                Tulis Cerita Pertamamu
+            <button
+              onClick={handleClick}
+              className="inline-flex items-center gap-2 px-8 py-3.5 rounded-2xl bg-primary text-primary-foreground font-semibold text-base hover:bg-primary/90 transition-all duration-300 hover:shadow-lg hover:shadow-primary/20"
+            >
+              {session ? "Tulis Cerita Pertamamu" : "Bergabung Sekarang"}
+              {session ? (
                 <PenLine className="h-4 w-4" />
-              </Link>
-            ) : (
-              <Link
-                href="/auth/signin"
-                className="inline-flex items-center gap-2 px-8 py-3.5 rounded-2xl bg-primary text-primary-foreground font-semibold text-base hover:bg-primary/90 transition-all duration-300 hover:shadow-lg hover:shadow-primary/20"
-              >
-                Bergabung Sekarang
+              ) : (
                 <ArrowRight className="h-4 w-4" />
-              </Link>
-            )}
+              )}
+            </button>
           </div>
         </motion.div>
       </div>

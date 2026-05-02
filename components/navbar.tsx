@@ -32,7 +32,6 @@ export function Navbar() {
     setSearchOpen,
     toggleTheme,
     handleLogout,
-    handleSignIn,
   } = useNavbar();
 
   const [mounted, setMounted] = useState(false);
@@ -56,7 +55,7 @@ export function Navbar() {
             </Link>
 
             {/* Desktop Nav */}
-            {!isProfile && (
+            {isProfile && isDashboard ? null : (
               <div className="hidden md:flex items-center gap-1">
                 {navLinks.map((link) => (
                   <Link
@@ -108,7 +107,7 @@ export function Navbar() {
                   </Link>
 
                   {/* Profile */}
-                  {user && username && !isProfile && (
+                  {user && username && !isProfile && !isDashboard && (
                     <Link
                       href={`/profile/${username || ""}`}
                       className="flex items-center gap-2 px-2 py-1.5 rounded-xl hover:bg-accent/50 transition-all duration-300"

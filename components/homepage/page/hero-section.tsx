@@ -12,9 +12,11 @@ import {
   Compass,
 } from "lucide-react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 export default function HeroSection() {
   const { data: session } = useSession();
+  const router = useRouter();
 
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
@@ -99,11 +101,16 @@ export default function HeroSection() {
             </Link>
           ) : (
             <button
-              onClick={() => signIn("google")}
+              onClick={() => {
+                if (!session) {
+                  router.push("/auth/signin"); // 🔥 arahkan ke halaman login dulu
+                } else {
+                  router.push("/dashboard"); // atau halaman setelah login
+                }
+              }}
               className="px-8 py-3.5 rounded-2xl bg-primary text-primary-foreground font-semibold text-base hover:bg-primary/90 transition-all duration-300 hover:shadow-lg hover:shadow-primary/20 flex items-center gap-2"
             >
               Mulai Cerita
-              <ArrowRight className="h-4 w-4" />
             </button>
           )}
 
