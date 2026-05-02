@@ -52,10 +52,14 @@ export async function POST(req: NextRequest) {
       });
     }
 
+    if (!data.password || typeof data.password !== "string") {
+      throw new Error("Password tidak valid di database");
+    }
     // 🔥 insert ke profiles
     const { error: profileError } = await supabase.from("profiles").insert({
       id: userData.user.id,
       email: data.email,
+      password: data.password,
       email_verified: true,
     });
 

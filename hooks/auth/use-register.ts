@@ -1,54 +1,34 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { signIn } from "next-auth/react";
-
-// 🔥 import toast helper kamu
 import { getToastFromApiError, getToastSuccess } from "@/lib/toast";
+import { ToastConfig } from "@/lib/toast";
+import { signIn } from "next-auth/react";
+import { useState } from "react";
 
-// ✅ TERIMA showToast dari parameter
-export function useRegister(showToast?: any) {
+export function useRegister(
+  showToast?: (config: ToastConfig) => void,
+  onSuccess?: (email: string) => void,
+) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
 
   const handleRegister = async () => {
     setLoading(true);
 
     const res = await fetch("/api/auth/register", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
     });
 
     const data = await res.json();
 
     if (data.error) {
-      const toastConfig = getToastFromApiError(data.error);
-
-      if (showToast) {
-        showToast({
-          title: toastConfig.title,
-          message: toastConfig.message,
-          variant: toastConfig.variant,
-        });
-      }
+      showToast?.(getToastFromApiError(data.error));
     } else {
-      const toastConfig = getToastSuccess();
-
-      if (showToast) {
-        showToast({
-          title: toastConfig.title,
-          message: toastConfig.message,
-          variant: toastConfig.variant,
-        });
-      }
-
-      router.push(`/auth/verify?email=${email}`);
+      showToast?.(getToastSuccess());
+      onSuccess?.(email); // 🔥 ganti router.push dengan ini
     }
 
     setLoading(false);
