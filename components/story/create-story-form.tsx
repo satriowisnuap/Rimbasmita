@@ -18,7 +18,7 @@ import { PrivacyActionsSection } from "@/components/story/privacy-actions-sectio
 
 export function CreateStoryForm() {
   const form = useCreateStoryForm();
-  const { trails, loadingTrails } = useTrails();
+  const { trails, loading: loadingTrails } = useTrails();
   const tagManager = useTagManager();
   const imageManager = useImageManager();
   const { isSubmitting, isDraft, error, setError, handleSubmit } =
