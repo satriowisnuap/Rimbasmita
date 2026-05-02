@@ -8,7 +8,7 @@ import Link from "next/link";
 import { useState } from "react";
 
 export default function TrailsSection({ fadeInUp, stagger }: any) {
-  const { trails, loading } = useTrails(6);
+  const { trails, loading } = useTrails(9);
 
   // ✅ state untuk semua image
   const [loadedImages, setLoadedImages] = useState<Record<string, boolean>>({});
