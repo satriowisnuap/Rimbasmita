@@ -48,11 +48,13 @@ async function saveOtp(
   hashed: string,
   code: string,
   expired: number,
+  username: string,
+  name: string,
 ) {
   await supabase.from("email_verifications").delete().eq("email", email);
   const { error } = await supabase
     .from("email_verifications")
-    .insert({ email, password: hashed, code, expired });
+    .insert({ email, password: hashed, code, expired, username, name });
   return error;
 }
 
@@ -68,12 +70,18 @@ async function sendVerificationEmail(email: string, code: string) {
 
 export async function POST(req: NextRequest) {
   try {
-    let { email, password } = await req.json();
+    let { email, password, username, name } = await req.json();
 
     if (!email || !password)
       return json({ error: "Email & password wajib diisi" }, 400);
 
     email = (email as string).toLowerCase().trim();
+
+    // ambil default dari email kalau kosong
+    const defaultUsername = email.split("@")[0];
+
+    username = username?.trim() || defaultUsername;
+    name = name?.trim() || username;
 
     if (await checkExistingProfile(email))
       return json({ error: "Email sudah terdaftar, silakan login" }, 409);
@@ -85,7 +93,7 @@ export async function POST(req: NextRequest) {
     const hashed = await bcrypt.hash(password, 10);
     const { code, expired } = generateOtp();
 
-    const insertError = await saveOtp(email, hashed, code, expired);
+    const insertError = await saveOtp(email, hashed, code, expired, username, name);
     if (insertError) return json({ error: insertError.message }, 500);
 
     try {

@@ -6,7 +6,10 @@ export async function POST(req: NextRequest) {
     let { email, code } = await req.json();
 
     if (!email || !code) {
-      return Response.json({ error: "Email dan kode wajib diisi" });
+      return Response.json(
+        { error: "Email dan kode wajib diisi" },
+        { status: 400 },
+      );
     }
 
     // 🔥 normalize email (HARUS SAMA dengan register)
@@ -20,12 +23,12 @@ export async function POST(req: NextRequest) {
       .single();
 
     if (error || !data) {
-      return Response.json({ error: "User tidak ditemukan" });
+      return Response.json({ error: "User tidak ditemukan" }, { status: 404 });
     }
 
     // 🔢 cek kode
     if (data.code !== code) {
-      return Response.json({ error: "Kode salah" });
+      return Response.json({ error: "Kode salah" }, { status: 400 });
     }
 
     // ⏰ cek expired
@@ -33,46 +36,55 @@ export async function POST(req: NextRequest) {
     const expiredTime = Number(data.expired);
 
     if (isNaN(expiredTime)) {
-      return Response.json({ error: "Format waktu tidak valid" });
+      return Response.json(
+        { error: "Format waktu tidak valid" },
+        { status: 400 },
+      );
     }
 
     if (now > expiredTime) {
-      return Response.json({ error: "Kode expired" });
+      return Response.json({ error: "Kode expired" }, { status: 400 });
     }
 
-    // 🔥 buat user auth
-    const { data: userData, error: authError } = await supabase.auth.signUp({
-      email: data.email,
-      password: data.password,
-    });
-
-    if (authError || !userData?.user) {
-      return Response.json({
-        error: authError?.message || "Gagal membuat user",
-      });
-    }
-
+    // 🔐 validasi password
     if (!data.password || typeof data.password !== "string") {
       throw new Error("Password tidak valid di database");
     }
-    // 🔥 insert ke profiles
+
+    // 🔥 fallback username & name
+    const username = data.username || data.email.split("@")[0];
+    const name = data.name || username;
+
+    // ⚠️ cegah duplicate user
+    const { data: existing } = await supabase
+      .from("profiles")
+      .select("email")
+      .eq("email", email)
+      .maybeSingle();
+
+    if (existing) {
+      return Response.json({ error: "User sudah terdaftar" }, { status: 409 });
+    }
+
+    // 🔥 insert ke profiles (FULL NEXTAUTH MODE)
     const { error: profileError } = await supabase.from("profiles").insert({
-      id: userData.user.id,
       email: data.email,
-      password: data.password,
+      password: data.password, // hashed
       email_verified: true,
+      username,
+      name,
     });
 
     if (profileError) {
-      return Response.json({ error: profileError.message });
+      return Response.json({ error: profileError.message }, { status: 500 });
     }
 
     // 🧹 hapus OTP setelah sukses
     await supabase.from("email_verifications").delete().eq("email", email);
 
-    return Response.json({ message: "Berhasil verifikasi" });
+    return Response.json({ message: "Berhasil verifikasi" }, { status: 200 });
   } catch (err) {
     console.error(err);
-    return Response.json({ error: "Server error" });
+    return Response.json({ error: "Server error" }, { status: 500 });
   }
 }

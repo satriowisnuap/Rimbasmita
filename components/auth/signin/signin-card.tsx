@@ -4,7 +4,6 @@ import { motion } from "framer-motion";
 import { SignInLogo } from "./signin-logo";
 import { SignInHero } from "./signin-hero";
 import { SignInEmailForm } from "./signin-email-form";
-import { SignInGoogleButton } from "./signin-google-button";
 import { SignInFooter } from "./signin-footer";
 import { Mountain } from "lucide-react";
 
@@ -45,7 +44,6 @@ export function SignInCard({
           loading={loading}
           onSubmit={onLogin}
         />
-        <SignInGoogleButton onGoogleLogin={onGoogleLogin} />
         <SignInFooter />
       </motion.div>
 
