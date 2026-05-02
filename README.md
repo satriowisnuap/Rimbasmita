@@ -188,14 +188,6 @@ GOOGLE_CLIENT_ID="your-google-client-id.apps.googleusercontent.com"
 GOOGLE_CLIENT_SECRET="your-google-client-secret"
 
 # =====================
-# CLOUDINARY
-# =====================
-# Dapatkan dari: https://cloudinary.com/console
-CLOUDINARY_CLOUD_NAME="your-cloud-name"
-CLOUDINARY_API_KEY="your-api-key"
-CLOUDINARY_API_SECRET="your-api-secret"
-
-# =====================
 # APP CONFIG
 # =====================
 NEXT_PUBLIC_APP_URL="http://localhost:3000"
@@ -248,62 +240,6 @@ rimbasmita/
 
 ---
 
-## 🗄️ Skema Database
-
-```prisma
-model User {
-  id        String    @id @default(uuid())
-  name      String
-  username  String    @unique
-  email     String    @unique
-  image     String?
-  bio       String?
-  createdAt DateTime  @default(now())
-
-  stories   Story[]
-  comments  Comment[]
-  likes     Like[]
-  bookmarks Bookmark[]
-  followers Follow[]  @relation("following")
-  following Follow[]  @relation("follower")
-}
-
-model Story {
-  id         String    @id @default(uuid())
-  title      String
-  slug       String    @unique
-  content    String
-  difficulty String    // easy | medium | hard
-  duration   String?
-  elevation  Int?
-  mood       String    // calm | challenging | reflective
-  isPrivate  Boolean   @default(false)
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
-
-  author     User        @relation(fields: [userId], references: [id])
-  userId     String
-  trail      Trail?      @relation(fields: [trailId], references: [id])
-  trailId    String?
-  images     StoryImage[]
-  comments   Comment[]
-  likes      Like[]
-  bookmarks  Bookmark[]
-  tags       Tag[]
-}
-
-model Trail {
-  id          String   @id @default(uuid())
-  name        String
-  location    String
-  elevation   Int?
-  difficulty  String
-  description String?
-  stories     Story[]
-}
-```
-
----
 
 ## 🗺️ Peta Halaman
 
@@ -361,25 +297,6 @@ font-family: "DM Mono", monospace; /* Technical content */
 ```
 
 ---
-
-## 🤝 Berkontribusi
-
-Kami menyambut kontribusi dari siapa saja! Berikut cara berkontribusi:
-
-```bash
-# 1. Fork repositori ini
-
-# 2. Buat branch fitur baru
-git checkout -b feature/nama-fitur-kamu
-
-# 3. Commit perubahanmu
-git commit -m 'feat: tambah fitur pencarian jalur'
-
-# 4. Push ke branch
-git push origin feature/nama-fitur-kamu
-
-# 5. Buka Pull Request
-```
 
 ### Konvensi Commit
 
