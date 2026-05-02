@@ -16,13 +16,21 @@ import {
   ArrowRight,
 } from "lucide-react";
 
-export function DashboardSidebar() {
+interface Props {
+  userName?: string;
+  userImage?: string;
+  username?: string;
+}
+
+export function DashboardSidebar(props: Props) {
   const { data: session } = useSession();
 
   const user = session?.user;
-  const username = session?.user?.username;
-  const userName = user?.name || "Pendaki";
-  const userImage = user?.image;
+
+  // 🔥 fallback logic (props > session)
+  const username = props.username ?? user?.username;
+  const userName = props.userName ?? user?.name ?? "Pendaki";
+  const userImage = props.userImage ?? user?.image;
 
   return (
     <aside className="w-full lg:w-72 flex-shrink-0 order-2 lg:order-1">

@@ -31,7 +31,7 @@ export function RegisterEmailForm({
 }: Props) {
   return (
     <div className="space-y-3">
-      {/* 🔥 Name */}
+      {/* Name */}
       <input
         type="text"
         placeholder="Nama"
@@ -49,21 +49,21 @@ export function RegisterEmailForm({
           const value = e.target.value;
           setEmail(value);
 
-          // 🔥 auto generate username dari email
+          // auto generate username dari email
           if (value.includes("@")) {
             const autoUsername = value.split("@")[0];
             setUsername(autoUsername);
 
             // opsional: isi name kalau masih kosong
-            if (!name) {
-              setName(autoUsername);
-            }
+            // if (!name) {
+            //   setName(autoUsername);
+            // }
           }
         }}
         className="w-full px-4 py-3 rounded-xl glass bg-transparent text-sm outline-none"
       />
 
-      {/* 🔥 Password */}
+      {/* Password */}
       <input
         type="password"
         placeholder="Password"

@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { SignInGoogleButton } from "./signin-google-button";
 import { SignInLogo } from "./signin-logo";
 import { SignInHero } from "./signin-hero";
 import { SignInEmailForm } from "./signin-email-form";
@@ -44,6 +45,7 @@ export function SignInCard({
           loading={loading}
           onSubmit={onLogin}
         />
+        <SignInGoogleButton onGoogleLogin={onGoogleLogin} />
         <SignInFooter />
       </motion.div>
 

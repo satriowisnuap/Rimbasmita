@@ -5,6 +5,8 @@ import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { DashboardSidebar, DashboardFeed } from "@/components/dashboard";
 import { useDashboard } from "@/hooks/dashboard/use-dashboard";
+import { useEffect, useState } from "react";
+import { AlertModal } from "@/components/ui/alert-modal";
 
 export default function DashboardPage() {
   const {
@@ -19,6 +21,24 @@ export default function DashboardPage() {
     username,
   } = useDashboard();
 
+  const [alert, setAlert] = useState<any>(null);
+
+  useEffect(() => {
+    const saved = sessionStorage.getItem("global-alert");
+
+    if (saved) {
+      const parsed = JSON.parse(saved);
+
+      setAlert({ ...parsed, open: true });
+
+      sessionStorage.removeItem("global-alert");
+
+      setTimeout(() => {
+        setAlert(null);
+      }, 2500);
+    }
+  }, []);
+
   if (!isDevMode && !user) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -32,6 +52,13 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-background">
+      <AlertModal
+        open={!!alert}
+        type={alert?.type}
+        title={alert?.title}
+        message={alert?.message}
+      />
+
       <Navbar />
 
       {isDevMode && (

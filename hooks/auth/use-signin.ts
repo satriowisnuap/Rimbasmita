@@ -4,15 +4,18 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 
-export function useSignIn() {
+export function useSignIn(
+  onSuccess?: () => void,
+  onError?: (message: string) => void,
+) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  // 🔐 LOGIN CREDENTIALS
+  // LOGIN CREDENTIALS
   const handleLogin = async () => {
-    if (loading) return; // ⛔ prevent double click
+    if (loading) return;
     setLoading(true);
 
     try {
@@ -24,33 +27,33 @@ export function useSignIn() {
       });
 
       if (res?.error) {
-        alert(res.error);
-        setLoading(false);
+        onError?.(res.error);
         return;
       }
 
-      // ✅ redirect manual (karena redirect: false)
+      onSuccess?.();
+
       router.push(res?.url || "/dashboard");
     } catch (err) {
       console.error("Login error:", err);
-      alert("Terjadi kesalahan saat login");
+      onError?.("Terjadi kesalahan saat login");
+    } finally {
       setLoading(false);
     }
   };
 
-  // 🔥 LOGIN GOOGLE
+  // LOGIN GOOGLE
   const handleGoogleLogin = async () => {
     if (loading) return;
     setLoading(true);
 
     try {
-      // ❗ NextAuth otomatis redirect → jangan pakai router.push
       await signIn("google", {
         callbackUrl: "/dashboard",
       });
     } catch (err) {
       console.error("Google login error:", err);
-      alert("Gagal login dengan Google");
+      onError?.("Gagal login dengan Google");
       setLoading(false);
     }
   };

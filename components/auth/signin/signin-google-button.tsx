@@ -3,10 +3,10 @@
 import { motion } from "framer-motion";
 
 interface Props {
-  onGoogleRegister: () => void;
+  onGoogleLogin: () => void;
 }
 
-export function RegisterGoogleButton({ onGoogleRegister }: Props) {
+export function SignInGoogleButton({ onGoogleLogin }: Props) {
   return (
     <>
       {/* Divider */}
@@ -22,7 +22,7 @@ export function RegisterGoogleButton({ onGoogleRegister }: Props) {
         transition={{ duration: 0.6, delay: 0.6, ease: "easeOut" as const }}
       >
         <button
-          onClick={onGoogleRegister}
+          onClick={onGoogleLogin}
           className="w-full flex items-center justify-center gap-3 px-6 py-3.5 rounded-2xl glass font-medium text-foreground hover:bg-accent/50 transition-all duration-300 group hover:shadow-lg hover:shadow-primary/5"
         >
           <svg className="h-5 w-5" viewBox="0 0 24 24">
@@ -43,7 +43,7 @@ export function RegisterGoogleButton({ onGoogleRegister }: Props) {
               fill="#EA4335"
             />
           </svg>
-          <span className="text-sm">Registrasi dengan Google</span>
+          <span className="text-sm">Masuk dengan Google</span>
         </button>
       </motion.div>
     </>

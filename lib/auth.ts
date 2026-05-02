@@ -11,7 +11,7 @@ const supabase = createClient(
 
 export const authOptions: NextAuthOptions = {
   providers: [
-    // 🔥 GOOGLE LOGIN (TETAP)
+    // 🔥 GOOGLE LOGIN
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID || "",
       clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
@@ -25,7 +25,7 @@ export const authOptions: NextAuthOptions = {
       },
     }),
 
-    // 🔥 TAMBAHAN: LOGIN EMAIL & PASSWORD
+    // 🔥 LOGIN EMAIL & PASSWORD
     CredentialsProvider({
       name: "credentials",
       credentials: {
@@ -41,7 +41,6 @@ export const authOptions: NextAuthOptions = {
 
           const email = credentials.email.toLowerCase();
 
-          // 🔍 ambil user dari database
           const { data, error } = await supabase
             .from("profiles")
             .select("*")
@@ -52,7 +51,6 @@ export const authOptions: NextAuthOptions = {
             throw new Error("Email atau password salah");
           }
 
-          // 🔐 cek password
           const isValid = await bcrypt.compare(
             credentials.password,
             data.password,
@@ -62,12 +60,10 @@ export const authOptions: NextAuthOptions = {
             throw new Error("Email atau password salah");
           }
 
-          // 🔒 optional: cek verifikasi email
           if (!data.email_verified) {
             throw new Error("Email belum diverifikasi");
           }
 
-          // ✅ RETURN USER (WAJIB)
           return {
             id: data.id,
             email: data.email,
@@ -89,6 +85,47 @@ export const authOptions: NextAuthOptions = {
   },
 
   callbacks: {
+    // 🔥 HANDLE GOOGLE LOGIN / REGISTER
+    async signIn({ user, account }) {
+      if (account?.provider === "google") {
+        const email = user.email?.toLowerCase();
+        if (!email) return false;
+
+        // 🔥 ambil state dari OAuth
+        const isRegister = account?.state === "register";
+
+        const { data: existingUser } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("email", email)
+          .maybeSingle();
+
+        // ❌ kalau register tapi sudah ada
+        if (isRegister && existingUser) {
+          throw new Error("Email sudah terdaftar, silakan login");
+        }
+
+        // 🔥 kalau belum ada → insert
+        if (!existingUser) {
+          const username = email.split("@")[0];
+
+          await supabase.from("profiles").insert({
+            email,
+            username,
+            name: user.name || username,
+            image: user.image || null,
+            email_verified: true,
+            password: null,
+          });
+        }
+
+        return true;
+      }
+
+      return true;
+    },
+
+    // 🔥 JWT
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id ?? token.sub ?? null;
@@ -97,6 +134,7 @@ export const authOptions: NextAuthOptions = {
       return token;
     },
 
+    // 🔥 SESSION
     async session({ session, token }) {
       if (session.user) {
         (session.user as any).id = token.id ?? null;
