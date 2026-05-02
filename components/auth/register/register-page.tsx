@@ -4,7 +4,14 @@ import { useRegister } from "@/hooks/auth/use-register";
 import { RegisterBackground } from "./register-background";
 import { RegisterCard } from "./register-card";
 
+// 🔥 tambah ini
+import { Toast } from "@/components/toast";
+import { useToast } from "@/components/use-toast";
+
 export function RegisterPage() {
+  // 🔥 ambil toast state + showToast
+  const { toast, showToast, hideToast } = useToast();
+
   const {
     email,
     setEmail,
@@ -13,11 +20,12 @@ export function RegisterPage() {
     loading,
     handleRegister,
     handleGoogleRegister,
-  } = useRegister();
+  } = useRegister(showToast); // ✅ INI YANG PENTING
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center relative overflow-hidden">
       <RegisterBackground />
+
       <RegisterCard
         email={email}
         setEmail={setEmail}
@@ -27,6 +35,9 @@ export function RegisterPage() {
         onRegister={handleRegister}
         onGoogleRegister={handleGoogleRegister}
       />
+
+      {/* 🔥 WAJIB */}
+      {toast && <Toast {...toast} onClose={hideToast} />}
     </div>
   );
 }

@@ -1,9 +1,14 @@
+"use client";
+
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
-import { supabase } from "@/lib/supabase";
 
-export function useRegister() {
+// 🔥 import toast helper kamu
+import { getToastFromApiError, getToastSuccess } from "@/lib/toast";
+
+// ✅ TERIMA showToast dari parameter
+export function useRegister(showToast?: any) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -12,16 +17,38 @@ export function useRegister() {
   const handleRegister = async () => {
     setLoading(true);
 
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
+    const res = await fetch("/api/auth/register", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email, password }),
     });
 
-    if (error) {
-      alert(error.message);
+    const data = await res.json();
+
+    if (data.error) {
+      const toastConfig = getToastFromApiError(data.error);
+
+      if (showToast) {
+        showToast({
+          title: toastConfig.title,
+          message: toastConfig.message,
+          variant: toastConfig.variant,
+        });
+      }
     } else {
-      alert("Registrasi berhasil! Silakan login.");
-      router.push("/auth/signin");
+      const toastConfig = getToastSuccess();
+
+      if (showToast) {
+        showToast({
+          title: toastConfig.title,
+          message: toastConfig.message,
+          variant: toastConfig.variant,
+        });
+      }
+
+      router.push(`/auth/verify?email=${email}`);
     }
 
     setLoading(false);
