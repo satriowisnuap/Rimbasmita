@@ -68,6 +68,7 @@ export const authOptions: NextAuthOptions = {
             id: data.id,
             email: data.email,
             name: data.username || "User",
+            username: data.username,
           };
         } catch (err: any) {
           throw new Error(err.message || "Login gagal");
@@ -127,10 +128,20 @@ export const authOptions: NextAuthOptions = {
 
     // 🔥 JWT
     async jwt({ token, user }) {
-      if (user) {
-        token.id = user.id ?? token.sub ?? null;
-        token.username = user.email?.split("@")[0] || token.username || "user";
+      // 🔥 saat login pertama
+      if (user?.email) {
+        const { data } = await supabase
+          .from("profiles")
+          .select("id, username")
+          .eq("email", user.email.toLowerCase())
+          .single();
+
+        if (data) {
+          token.id = data.id;
+          token.username = data.username;
+        }
       }
+
       return token;
     },
 
