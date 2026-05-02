@@ -9,41 +9,47 @@ export function useRegister(
 ) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleRegister = async () => {
+    if (loading) return;
+
+    if (!email || !password) {
+      onError?.("Email dan password wajib diisi");
+      return;
+    }
+
     try {
       setLoading(true);
+
+      const payload = {
+        email: email.trim(),
+        password,
+        name: name.trim(),
+      };
 
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify(payload),
       });
 
       const data = await res.json();
 
-      // 🔥 handle error dari server
       if (!res.ok) {
-        onError?.(data.error || "Email sudah terdaftar");
+        onError?.(data.error || "Pendaftaran gagal");
         return;
       }
 
-      if (data.error) {
-        onError?.(data.error);
-        return;
-      }
-
-      // ✅ sukses
       onSuccess?.(email);
-    } catch (err) {
+    } catch {
       onError?.("Terjadi kesalahan server");
     } finally {
       setLoading(false);
     }
   };
 
-  // 🔥 Google register
   const handleGoogleRegister = () => {
     signIn("google", { callbackUrl: "/dashboard" });
   };
@@ -53,6 +59,8 @@ export function useRegister(
     setEmail,
     password,
     setPassword,
+    name,
+    setName,
     loading,
     handleRegister,
     handleGoogleRegister,

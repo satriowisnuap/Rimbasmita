@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSignIn } from "@/hooks/auth/use-signin";
 import { SignInBackground } from "./signin-background";
 import { SignInCard } from "./signin-card";
 import { AlertModal } from "@/components/ui/alert-modal";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 type AlertType = "success" | "error" | "warning" | "info";
 
@@ -14,8 +14,6 @@ interface AlertState {
   type: AlertType;
   title?: string;
   message: string;
-  onConfirm?: () => void;
-  confirmLabel?: string;
 }
 
 const CLOSED_ALERT: AlertState = { open: false, type: "info", message: "" };
@@ -23,14 +21,9 @@ const CLOSED_ALERT: AlertState = { open: false, type: "info", message: "" };
 export function SignInPage() {
   const [alert, setAlert] = useState<AlertState>(CLOSED_ALERT);
   const router = useRouter();
-
-  const showAlert = (
-    type: AlertType,
-    title: string,
-    message: string,
-    onConfirm?: () => void,
-    confirmLabel = "OK",
-  ) => setAlert({ open: true, type, title, message, onConfirm, confirmLabel });
+  const searchParams = useSearchParams();
+  const showAlert = (type: AlertType, title: string, message: string) =>
+    setAlert({ open: true, type, title, message });
 
   const closeAlert = () => setAlert((prev) => ({ ...prev, open: false }));
 
@@ -54,11 +47,31 @@ export function SignInPage() {
     router.push("/dashboard");
   };
 
+  useEffect(() => {
+    if (searchParams.get("verified") === "true") {
+      setAlert({
+        open: true,
+        type: "success",
+        title: "Verifikasi Berhasil! 🌿",
+        message: "Akunmu telah diaktifkan. Silakan login untuk melanjutkan.",
+      });
+
+      // 🔥 auto close setelah 2.5 detik
+      setTimeout(() => {
+        setAlert((prev) => ({ ...prev, open: false }));
+      }, 2500);
+
+      const url = new URL(window.location.href);
+      url.searchParams.delete("verified");
+      window.history.replaceState({}, "", url.toString());
+    }
+  }, [searchParams]);
+
   const handleGoogleLoginWithAlert = () => {
     const alertData = {
       type: "success",
       title: "Login dengan Google Berhasil 🌿",
-      message: "Selamat datang kembali! Petualanganmu siap dimulai 🚀",
+      message: "Selamat datang kembali! Petualanganmu siap dimulai ",
     };
 
     // simpan alert untuk dashboard
@@ -97,6 +110,7 @@ export function SignInPage() {
         setPassword={setPassword}
         loading={loading}
         onLogin={handleLogin}
+        // onClose={() => setAlert(CLOSED_ALERT)}
         onGoogleLogin={handleGoogleLoginWithAlert}
       />
     </div>
