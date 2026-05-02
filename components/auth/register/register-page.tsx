@@ -5,16 +5,14 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useRegister } from "@/hooks/auth/use-register";
 import { RegisterBackground } from "./register-background";
 import { RegisterCard } from "./register-card";
-import { VerifyCard } from "../verify/verify-card"; // 🔥 import baru
-import { Toast } from "@/components/toast";
-import { useToast } from "@/components/ui/use-toast";
+import { VerifyCard } from "../verify/verify-card";
 
 export function RegisterPage() {
-  const { toast, showToast, hideToast } = useToast();
-
   // 🔥 tambah state ini
   const [step, setStep] = useState<"register" | "verify">("register");
   const [registeredEmail, setRegisteredEmail] = useState("");
+  const [username, setUsername] = useState("");
+  const [name, setName] = useState("");
 
   // 🔥 callback dipanggil setelah register berhasil
   const handleRegisterSuccess = (email: string) => {
@@ -30,7 +28,7 @@ export function RegisterPage() {
     loading,
     handleRegister,
     handleGoogleRegister,
-  } = useRegister(showToast, handleRegisterSuccess); // ✅ pass callback
+  } = useRegister(handleRegisterSuccess);
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center relative overflow-hidden">
@@ -51,6 +49,10 @@ export function RegisterPage() {
               setEmail={setEmail}
               password={password}
               setPassword={setPassword}
+              username={username}
+              setUsername={setUsername}
+              name={name}
+              setName={setName}
               loading={loading}
               onRegister={handleRegister}
               onGoogleRegister={handleGoogleRegister}
@@ -72,7 +74,7 @@ export function RegisterPage() {
         )}
       </AnimatePresence>
 
-      {toast && <Toast {...toast} onClose={hideToast} />}
+      {/**/}
     </div>
   );
 }

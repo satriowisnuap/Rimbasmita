@@ -13,6 +13,10 @@ interface Props {
   setEmail: (v: string) => void;
   password: string;
   setPassword: (v: string) => void;
+  username: string;
+  setUsername: (v: string) => void;
+  name: string;
+  setName: (v: string) => void;
   loading: boolean;
   onRegister: () => void;
   onGoogleRegister: () => void;
@@ -23,6 +27,10 @@ export function RegisterCard({
   setEmail,
   password,
   setPassword,
+  username,
+  setUsername,
+  name,
+  setName,
   loading,
   onRegister,
   onGoogleRegister,
@@ -42,6 +50,10 @@ export function RegisterCard({
           setEmail={setEmail}
           password={password}
           setPassword={setPassword}
+          username={username}
+          setUsername={setUsername}
+          name={name}
+          setName={setName}
           loading={loading}
           onSubmit={onRegister}
         />

@@ -47,20 +47,28 @@ export function VerifyPage() {
     if (!email) return alert("Email tidak ditemukan");
 
     setLoading(true);
+
     const res = await fetch("/api/auth/verify", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, code }),
     });
+
     const data = await res.json();
     setLoading(false);
 
-    if (data.error) {
-      alert(data.error);
-    } else {
-      alert("Berhasil! Silakan login");
-      router.push("/auth/signin");
+    console.log("VERIFY RESPONSE:", data); 
+
+    if (!res.ok || data.error) {
+      alert(data.error || "Verifikasi gagal");
+      return;
     }
+
+    alert("Berhasil! Silakan login");
+
+    setTimeout(() => {
+      router.push("/auth/signin");
+    }, 1000);
   };
 
   return (

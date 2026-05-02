@@ -1,14 +1,9 @@
 "use client";
 
-import { getToastFromApiError, getToastSuccess } from "@/lib/toast";
-import { ToastConfig } from "@/lib/toast";
 import { signIn } from "next-auth/react";
 import { useState } from "react";
 
-export function useRegister(
-  showToast?: (config: ToastConfig) => void,
-  onSuccess?: (email: string) => void,
-) {
+export function useRegister(onSuccess?: (email: string) => void) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -25,9 +20,9 @@ export function useRegister(
     const data = await res.json();
 
     if (data.error) {
-      showToast?.(getToastFromApiError(data.error));
+      alert(data.error);
     } else {
-      showToast?.(getToastSuccess());
+      alert("Berhasil! Silakan login");
       onSuccess?.(email); // 🔥 ganti router.push dengan ini
     }
 
