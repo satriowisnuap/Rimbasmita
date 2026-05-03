@@ -77,11 +77,15 @@ export async function POST(req: NextRequest) {
 
     email = (email as string).toLowerCase().trim();
 
+    if (!name || name.trim().length < 2) {
+      return json({ error: "Nama wajib diisi minimal 2 karakter" }, 400);
+    }
+
     // ambil default dari email kalau kosong
     const defaultUsername = email.split("@")[0];
 
     username = username?.trim() || defaultUsername;
-    name = name?.trim() || username;
+    name = name?.trim();
 
     if (await checkExistingProfile(email))
       return json({ error: "Email sudah terdaftar, silakan login" }, 409);
@@ -93,7 +97,14 @@ export async function POST(req: NextRequest) {
     const hashed = await bcrypt.hash(password, 10);
     const { code, expired } = generateOtp();
 
-    const insertError = await saveOtp(email, hashed, code, expired, username, name);
+    const insertError = await saveOtp(
+      email,
+      hashed,
+      code,
+      expired,
+      username,
+      name,
+    );
     if (insertError) return json({ error: insertError.message }, 500);
 
     try {

@@ -53,7 +53,8 @@ export async function POST(req: NextRequest) {
 
     // 🔥 fallback username & name
     const username = data.username || data.email.split("@")[0];
-    const name = data.name || username;
+    const name =
+      data.name && data.name.trim().length > 0 ? data.name.trim() : username;
 
     // ⚠️ cegah duplicate user
     const { data: existing } = await supabase
@@ -66,10 +67,10 @@ export async function POST(req: NextRequest) {
       return Response.json({ error: "User sudah terdaftar" }, { status: 409 });
     }
 
-    // 🔥 insert ke profiles (FULL NEXTAUTH MODE)
+    // insert ke profiles (FULL NEXTAUTH MODE)
     const { error: profileError } = await supabase.from("profiles").insert({
       email: data.email,
-      password: data.password, // hashed
+      password: data.password,
       email_verified: true,
       username,
       name,

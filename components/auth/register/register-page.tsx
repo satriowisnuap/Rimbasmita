@@ -24,7 +24,6 @@ export function RegisterPage() {
   const [step, setStep] = useState<"register" | "verify">("register");
   const [registeredEmail, setRegisteredEmail] = useState("");
   const [username, setUsername] = useState("");
-  const [name, setName] = useState("");
   const [alert, setAlert] = useState<AlertState>(CLOSED_ALERT);
   const router = useRouter();
 
@@ -93,6 +92,8 @@ export function RegisterPage() {
     setEmail,
     password,
     setPassword,
+    name,
+    setName,
     loading,
     handleRegister,
     handleGoogleRegister,
