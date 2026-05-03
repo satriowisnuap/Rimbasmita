@@ -16,6 +16,8 @@ import {
   Info
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useSession } from "next-auth/react";
+import { TrailReviews } from "@/components/trails/trail-reviews";
 import Link from "next/link";
 
 interface Trail {
@@ -46,6 +48,7 @@ const difficultyColors: Record<string, string> = {
 export default function TrailDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const { data: session } = useSession();
   const [trail, setTrail] = useState<Trail | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -67,6 +70,15 @@ export default function TrailDetailPage() {
       fetchTrail();
     }
   }, [params.id]);
+
+  const handleWriteStory = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!session) {
+      router.push("/auth/signin");
+    } else {
+      router.push("/create");
+    }
+  };
 
   if (loading) {
     return (
@@ -151,7 +163,7 @@ export default function TrailDetailPage() {
         </div>
 
         {/* Trail Info Content */}
-        <div className="max-w-7xl mx-auto px-6 sm:px-12 -mt-8 relative z-10">
+        <div className="max-w-7xl mx-auto px-6 sm:px-12 -mt-8 relative z-10 pb-20">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Left Column: Stats & Description */}
             <div className="lg:col-span-2 space-y-8">
@@ -195,62 +207,111 @@ export default function TrailDetailPage() {
                   </p>
                 </div>
               </motion.div>
-            </div>
 
-            {/* Right Column: Community Stories */}
-            <div className="space-y-8">
-              <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold flex items-center gap-3">
-                  <BookOpen className="h-6 w-6 text-primary" />
-                  Cerita Pendaki
-                </h2>
-                <span className="text-sm font-medium text-muted-foreground bg-accent/50 px-3 py-1 rounded-full">
-                  {trail.stories.length}
-                </span>
-              </div>
+              {/* Stories Section (NEW LOCATION) */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+                className="space-y-8"
+              >
+                <div className="flex items-center justify-between pt-8 border-t border-border/50">
+                  <h2 className="text-2xl font-bold flex items-center gap-3">
+                    <BookOpen className="h-6 w-6 text-primary" />
+                    Cerita dari Jalur Ini
+                  </h2>
+                  <button 
+                    onClick={handleWriteStory}
+                    className="text-sm font-bold text-primary hover:bg-primary/10 px-4 py-2 rounded-xl transition-colors border border-primary/20"
+                  >
+                    Tulis Cerita
+                  </button>
+                </div>
 
-              <div className="space-y-6">
                 {trail.stories.length > 0 ? (
-                  trail.stories.map((story, i) => (
-                    <motion.div
-                      key={story.id}
-                      initial={{ opacity: 0, x: 20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.1 * i }}
-                    >
-                      <StoryCard 
-                        id={story.id}
-                        slug={story.slug}
-                        title={story.title}
-                        excerpt={story.excerpt || ""}
-                        coverImage={story.story_images?.[0]?.image_url}
-                        author={{
-                          name: story.profiles?.name || "Anonim",
-                          username: story.profiles?.username || "",
-                          image: story.profiles?.image || undefined
-                        }}
-                        trail={{
-                          name: trail.name,
-                          location: trail.location
-                        }}
-                        difficulty={story.difficulty || undefined}
-                        duration={story.duration || undefined}
-                        mood={story.mood || undefined}
-                        likesCount={story.likes_count}
-                        commentsCount={story.comments_count}
-                        createdAt={story.created_at}
-                      />
-                    </motion.div>
-                  ))
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    {trail.stories.map((story, i) => (
+                      <motion.div
+                        key={story.id}
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: 0.1 * i }}
+                      >
+                        <StoryCard 
+                          id={story.id}
+                          slug={story.slug}
+                          title={story.title}
+                          excerpt={story.excerpt || ""}
+                          coverImage={story.story_images?.[0]?.image_url}
+                          author={{
+                            name: story.profiles?.name || "Anonim",
+                            username: story.profiles?.username || "",
+                            image: story.profiles?.image || undefined
+                          }}
+                          trail={{
+                            name: trail.name,
+                            location: trail.location
+                          }}
+                          difficulty={story.difficulty || undefined}
+                          duration={story.duration || undefined}
+                          mood={story.mood || undefined}
+                          likesCount={story.likes_count}
+                          commentsCount={story.comments_count}
+                          createdAt={story.created_at}
+                        />
+                      </motion.div>
+                    ))}
+                  </div>
                 ) : (
-                  <div className="glass rounded-3xl p-10 text-center">
-                    <BookOpen className="h-10 w-10 text-muted-foreground/20 mx-auto mb-4" />
-                    <p className="text-sm text-muted-foreground">Belum ada cerita pendaki untuk jalur ini. Jadilah yang pertama!</p>
-                    <Link href="/create" className="text-primary font-bold text-sm mt-4 inline-block hover:underline">
-                      Tulis Cerita
-                    </Link>
+                  <div className="glass rounded-3xl p-16 text-center border-dashed border-2">
+                    <BookOpen className="h-12 w-12 text-muted-foreground/20 mx-auto mb-4" />
+                    <h3 className="text-lg font-bold mb-2">Jadilah yang Pertama</h3>
+                    <p className="text-sm text-muted-foreground max-w-xs mx-auto mb-6">
+                      Belum ada cerita pendaki untuk jalur ini. Bagikan pengalaman pertamamu di sini!
+                    </p>
+                    <button 
+                      onClick={handleWriteStory}
+                      className="px-6 py-3 rounded-2xl bg-primary text-primary-foreground font-bold text-sm hover:bg-primary/90 transition-all"
+                    >
+                      Tulis Cerita Sekarang
+                    </button>
                   </div>
                 )}
+              </motion.div>
+
+              {/* Trail Reviews Section (NEW) */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+                className="pt-12 border-t border-border/50"
+              >
+                <TrailReviews trailId={trail.id} />
+              </motion.div>
+            </div>
+
+            {/* Right Column: Tips or Other Info */}
+            <div className="space-y-6">
+              <div className="glass rounded-3xl p-6 border-primary/10">
+                <h3 className="text-lg font-bold mb-4">Tips Mendaki</h3>
+                <ul className="space-y-3 text-sm text-muted-foreground">
+                  <li className="flex gap-2">
+                    <div className="h-1.5 w-1.5 rounded-full bg-primary mt-1.5 flex-shrink-0" />
+                    Siapkan fisik dan stamina sebelum mendaki.
+                  </li>
+                  <li className="flex gap-2">
+                    <div className="h-1.5 w-1.5 rounded-full bg-primary mt-1.5 flex-shrink-0" />
+                    Bawa perlengkapan pendakian yang memadai.
+                  </li>
+                  <li className="flex gap-2">
+                    <div className="h-1.5 w-1.5 rounded-full bg-primary mt-1.5 flex-shrink-0" />
+                    Selalu lapor di basecamp resmi.
+                  </li>
+                  <li className="flex gap-2">
+                    <div className="h-1.5 w-1.5 rounded-full bg-primary mt-1.5 flex-shrink-0" />
+                    Jangan meninggalkan sampah di gunung.
+                  </li>
+                </ul>
               </div>
             </div>
           </div>
