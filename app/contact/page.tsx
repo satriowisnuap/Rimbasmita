@@ -18,6 +18,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
 import emailjs from "@emailjs/browser";
 
@@ -263,32 +270,23 @@ export default function ContactPage() {
                         Subjek
                       </Label>
                       <div className="relative">
-                        <Tag className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <select
-                          id="subject"
-                          name="subject"
-                          required
+                        <Tag className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" />
+                        <Select
                           value={formData.subject}
-                          onChange={handleChange}
-                          className="flex h-12 w-full rounded-2xl border border-border/50 bg-background/50 pl-10 pr-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:border-primary disabled:cursor-not-allowed disabled:opacity-50 transition-all appearance-none"
+                          onValueChange={(value) =>
+                            setFormData((prev) => ({ ...prev, subject: value }))
+                          }
                         >
-                          <option value="" disabled>
-                            Pilih Subjek
-                          </option>
-                          <option value="Kritik">Kritik</option>
-                          <option value="Saran">Saran</option>
-                          <option value="Kerja Sama">Kerja Sama</option>
-                          <option value="Lainnya">Lainnya</option>
-                        </select>
-                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-muted-foreground">
-                          <svg
-                            className="fill-current h-4 w-4"
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 20 20"
-                          >
-                            <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
-                          </svg>
-                        </div>
+                          <SelectTrigger className="pl-10 h-12 rounded-2xl bg-background/50 border-border/50 focus:ring-primary/20 transition-all">
+                            <SelectValue placeholder="Pilih Subjek" />
+                          </SelectTrigger>
+                          <SelectContent className="glass-strong rounded-2xl border-border/50 shadow-2xl">
+                            <SelectItem value="Kritik">Kritik</SelectItem>
+                            <SelectItem value="Saran">Saran</SelectItem>
+                            <SelectItem value="Kerja Sama">Kerja Sama</SelectItem>
+                            <SelectItem value="Lainnya">Lainnya</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
                     </div>
 
