@@ -22,6 +22,7 @@ type DifficultyFilter = "all" | "easy" | "medium" | "hard";
 export default function ExplorePage() {
   const [trails, setTrails] = useState<Trail[]>([]);
   const [storyCounts, setStoryCounts] = useState<Record<string, number>>({});
+  const [avgRatings, setAvgRatings] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -72,7 +73,33 @@ export default function ExplorePage() {
       }
     };
 
+    const fetchRatings = async () => {
+      const { data, error } = await supabase
+        .from("trail_reviews")
+        .select("trail_id, rating");
+
+      if (error) {
+        console.error("Error fetching ratings:", error);
+      } else {
+        const ratingsMap: Record<string, { total: number; count: number }> = {};
+        (data || []).forEach((row: { trail_id: string; rating: number }) => {
+          if (!ratingsMap[row.trail_id]) {
+            ratingsMap[row.trail_id] = { total: 0, count: 0 };
+          }
+          ratingsMap[row.trail_id].total += row.rating;
+          ratingsMap[row.trail_id].count += 1;
+        });
+
+        const averages: Record<string, number> = {};
+        Object.entries(ratingsMap).forEach(([id, stats]) => {
+          averages[id] = Number((stats.total / stats.count).toFixed(1));
+        });
+        setAvgRatings(averages);
+      }
+    };
+
     fetchStoryCounts();
+    fetchRatings();
   }, []);
 
   // Filtered trails
@@ -128,6 +155,7 @@ export default function ExplorePage() {
       <ExploreTrailsGrid
         trails={filteredTrails}
         storyCounts={storyCounts}
+        avgRatings={avgRatings}
         loading={loading}
         hasActiveFilters={hasActiveFilters}
         clearFilters={clearFilters}

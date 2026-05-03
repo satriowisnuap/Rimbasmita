@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { MapPin, ArrowUp, Clock, Mountain, BookOpen } from 'lucide-react';
+import { MapPin, ArrowUp, Clock, Mountain, BookOpen, Star } from 'lucide-react';
 
 interface TrailCardProps {
   id: string;
@@ -13,6 +13,7 @@ interface TrailCardProps {
   difficulty: string;
   estimatedDuration?: string;
   storyCount?: number;
+  avgRating?: number;
   image?: string;
 }
 
@@ -36,65 +37,77 @@ export function TrailCard({
   difficulty,
   estimatedDuration,
   storyCount = 0,
+  avgRating = 0,
   image,
 }: TrailCardProps) {
   return (
-    <motion.div whileHover={{ y: -4 }} transition={{ duration: 0.3 }}>
-      <Link href={`/trails/${id}`} className="block group">
-        <div className="glass rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-primary/5">
-          {/* Preview Image */}
-          <div className="relative h-40 overflow-hidden bg-muted">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      className="group h-full"
+    >
+      <Link href={`/trails/${id}`} className="block h-full">
+        <div className="glass rounded-[32px] overflow-hidden border-primary/5 hover:border-primary/20 transition-all duration-500 hover:shadow-2xl hover:shadow-primary/5 h-full flex flex-col relative">
+          {/* Image Section */}
+          <div className="relative h-56 overflow-hidden bg-muted">
             {image ? (
-              <img 
-                src={image} 
-                alt={name} 
-                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+              <img
+                src={image}
+                alt={name}
+                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center bg-primary/5">
-                <Mountain className="h-10 w-10 text-primary/20" />
+                <Mountain className="h-12 w-12 text-primary/20" />
               </div>
             )}
-            {/* Difficulty badge overlay */}
-            <div className="absolute top-3 right-3">
-              <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border backdrop-blur-md ${difficultyColors[difficulty] || ''}`}>
+            <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent opacity-60" />
+            
+            {/* Badges Overlay */}
+            <div className="absolute top-4 right-4 flex flex-col gap-2">
+              {avgRating > 0 && (
+                <div className="bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-2xl border border-white/10 flex items-center gap-1.5 shadow-lg">
+                  <Star className="h-3.5 w-3.5 text-amber-400 fill-amber-400" />
+                  <span className="text-sm font-bold text-white">{avgRating}</span>
+                </div>
+              )}
+              <div className="bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-2xl border border-white/10 flex items-center gap-1.5 shadow-lg">
+                <BookOpen className="h-3.5 w-3.5 text-white" />
+                <span className="text-sm font-bold text-white">{storyCount}</span>
+              </div>
+            </div>
+            
+            <div className="absolute bottom-4 left-4 right-4">
+              <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border backdrop-blur-md ${difficultyColors[difficulty] || difficultyColors.medium}`}>
                 {difficultyLabels[difficulty] || difficulty}
               </span>
             </div>
           </div>
 
-          <div className="p-5">
-            {/* Stats row */}
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                <MapPin className="h-3.5 w-3.5 text-primary" />
-                <span className="line-clamp-1">{location}</span>
-              </div>
-              {storyCount > 0 && (
-                <span className="flex items-center gap-1 text-[10px] font-medium bg-primary/10 text-primary px-2 py-0.5 rounded-full">
-                  <BookOpen className="h-3 w-3" />
-                  {storyCount}
-                </span>
-              )}
+          {/* Info Section */}
+          <div className="p-6 flex flex-col flex-grow">
+            <div className="flex items-center gap-1.5 text-xs font-bold text-primary uppercase tracking-widest mb-2">
+              <MapPin className="h-3.5 w-3.5" />
+              {location}
             </div>
-
-            {/* Name */}
-            <h3 className="text-lg font-bold text-foreground group-hover:text-primary transition-colors mb-3 line-clamp-1">
+            <h3 className="text-2xl font-black text-foreground mb-4 group-hover:text-primary transition-colors line-clamp-1">
               {name}
             </h3>
-
-            {/* Bottom info */}
-            <div className="flex items-center gap-4 text-xs text-muted-foreground border-t border-border/50 pt-4">
-              <span className="flex items-center gap-1.5">
-                <ArrowUp className="h-3.5 w-3.5 text-primary" />
-                {elevation.toLocaleString()} mdpl
-              </span>
-              {estimatedDuration && (
-                <span className="flex items-center gap-1.5">
-                  <Clock className="h-3.5 w-3.5 text-primary" />
-                  {estimatedDuration}
-                </span>
-              )}
+            
+            <div className="mt-auto flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                  <ArrowUp className="h-4 w-4" />
+                </div>
+                <div>
+                  <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-tighter leading-none mb-1">Ketinggian</p>
+                  <p className="text-sm font-black text-foreground">{elevation.toLocaleString("id-ID")} mdpl</p>
+                </div>
+              </div>
+              <div className="h-10 w-10 rounded-2xl bg-secondary flex items-center justify-center text-foreground group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-300">
+                <ArrowRight className="h-5 w-5 text-current" />
+              </div>
             </div>
           </div>
         </div>
@@ -102,3 +115,5 @@ export function TrailCard({
     </motion.div>
   );
 }
+
+import { ArrowRight } from 'lucide-react';

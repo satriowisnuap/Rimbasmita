@@ -34,6 +34,7 @@ const itemVariants = {
 interface ExploreTrailsGridProps {
   trails: Trail[];
   storyCounts: Record<string, number>;
+  avgRatings: Record<string, number>;
   loading: boolean;
   hasActiveFilters: boolean;
   clearFilters: () => void;
@@ -42,6 +43,7 @@ interface ExploreTrailsGridProps {
 export function ExploreTrailsGrid({
   trails,
   storyCounts,
+  avgRatings,
   loading,
   hasActiveFilters,
   clearFilters,
@@ -134,6 +136,7 @@ export function ExploreTrailsGrid({
                       difficulty={trail.difficulty}
                       estimatedDuration={trail.estimated_duration || undefined}
                       storyCount={storyCounts[trail.id] || 0}
+                      avgRating={avgRatings[trail.id] || 0}
                       image={trail.image || undefined}
                     />
                   </motion.div>
