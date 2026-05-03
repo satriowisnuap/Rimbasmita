@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { supabase } from "@/lib/supabase";
 
 interface UseDeleteStoryProps {
   onDeleted: (storyId: string) => void;
@@ -13,12 +12,18 @@ export function useDeleteStory({ onDeleted }: UseDeleteStoryProps) {
     setDeletingId(storyId);
     setConfirmDeleteId(null);
 
-    const { error } = await supabase.from("stories").delete().eq("id", storyId);
+    try {
+      const res = await fetch(`/api/journal/${storyId}`, {
+        method: "DELETE",
+      });
 
-    if (error) {
+      if (!res.ok) {
+        console.error("Failed to delete story");
+      } else {
+        onDeleted(storyId);
+      }
+    } catch (error) {
       console.error("Error deleting story:", error);
-    } else {
-      onDeleted(storyId);
     }
 
     setDeletingId(null);

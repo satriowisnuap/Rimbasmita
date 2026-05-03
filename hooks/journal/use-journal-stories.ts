@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
-import { supabase } from "@/lib/supabase";
 import { JournalStory } from "@/constans/journal-config";
 
 export function useJournalStories() {
@@ -11,42 +10,21 @@ export function useJournalStories() {
   const [drafts, setDrafts] = useState<JournalStory[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchPrivateStories = useCallback(async () => {
+  const fetchJournalStories = useCallback(async () => {
     if (!userId) return;
 
-    const { data, error } = await supabase
-      .from("stories")
-      .select(
-        "id, title, slug, excerpt, mood, is_draft, is_private, created_at",
-      )
-      .eq("user_id", userId)
-      .eq("is_private", true)
-      .eq("is_draft", false)
-      .order("created_at", { ascending: false });
+    try {
+      const res = await fetch("/api/journal");
+      if (!res.ok) {
+        console.error("Failed to fetch journal stories");
+        return;
+      }
 
-    if (error) {
-      console.error("Error fetching private stories:", error);
-    } else {
-      setPrivateStories(data || []);
-    }
-  }, [userId]);
-
-  const fetchDrafts = useCallback(async () => {
-    if (!userId) return;
-
-    const { data, error } = await supabase
-      .from("stories")
-      .select(
-        "id, title, slug, excerpt, mood, is_draft, is_private, created_at",
-      )
-      .eq("user_id", userId)
-      .eq("is_draft", true)
-      .order("updated_at", { ascending: false });
-
-    if (error) {
-      console.error("Error fetching drafts:", error);
-    } else {
-      setDrafts(data || []);
+      const data = await res.json();
+      setPrivateStories(data.privateStories || []);
+      setDrafts(data.drafts || []);
+    } catch (error) {
+      console.error("Error fetching journal stories:", error);
     }
   }, [userId]);
 
@@ -55,12 +33,12 @@ export function useJournalStories() {
 
     const fetchAll = async () => {
       setLoading(true);
-      await Promise.all([fetchPrivateStories(), fetchDrafts()]);
+      await fetchJournalStories();
       setLoading(false);
     };
 
     fetchAll();
-  }, [status, userId, fetchPrivateStories, fetchDrafts]);
+  }, [status, userId, fetchJournalStories]);
 
   const removeStory = (storyId: string) => {
     setPrivateStories((prev) => prev.filter((s) => s.id !== storyId));

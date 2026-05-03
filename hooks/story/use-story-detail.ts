@@ -151,10 +151,8 @@ export function useStoryDetail(): UseStoryDetailReturn {
       setLikesCount(data.story.likes_count || 0);
       setBookmarksCount(data.story.bookmarks_count || 0);
       
-      if (session?.user) {
-        setIsLiked(data.isLiked);
-        setIsBookmarked(data.isBookmarked);
-      }
+      setIsLiked(data.isLiked || false);
+      setIsBookmarked(data.isBookmarked || false);
     } catch {
       // Silently handle fetch errors
     } finally {
