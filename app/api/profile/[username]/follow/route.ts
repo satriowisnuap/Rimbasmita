@@ -4,9 +4,12 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { createNotification } from "@/lib/notifications";
 
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
 export async function POST(
   req: Request,
-  { params }: { params: { username: string } }
+  { params }: { params: { username: string } },
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -21,7 +24,7 @@ export async function POST(
     // Find the profile to follow
     const profile = await prisma.profile.findUnique({
       where: { username: username.toLowerCase() },
-      select: { id: true }
+      select: { id: true },
     });
 
     if (!profile) {
@@ -29,7 +32,10 @@ export async function POST(
     }
 
     if (profile.id === userId) {
-      return NextResponse.json({ error: "Cannot follow yourself" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Cannot follow yourself" },
+        { status: 400 },
+      );
     }
 
     // Check if already following
@@ -37,9 +43,9 @@ export async function POST(
       where: {
         follower_id_following_id: {
           follower_id: userId,
-          following_id: profile.id
-        }
-      }
+          following_id: profile.id,
+        },
+      },
     });
 
     if (existingFollow) {
@@ -48,19 +54,19 @@ export async function POST(
         where: {
           follower_id_following_id: {
             follower_id: userId,
-            following_id: profile.id
-          }
-        }
+            following_id: profile.id,
+          },
+        },
       });
-      
+
       return NextResponse.json({ following: false });
     } else {
       // Follow
       await prisma.follows.create({
         data: {
           follower_id: userId,
-          following_id: profile.id
-        }
+          following_id: profile.id,
+        },
       });
 
       // Create notification
@@ -69,14 +75,14 @@ export async function POST(
         actorId: userId,
         type: "follow",
       });
-      
+
       return NextResponse.json({ following: true });
     }
   } catch (error) {
     console.error("Error toggling follow:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

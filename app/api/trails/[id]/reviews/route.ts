@@ -3,9 +3,12 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
 export async function GET(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   try {
     const { id } = params;
@@ -18,10 +21,10 @@ export async function GET(
             name: true,
             username: true,
             image: true,
-          }
-        }
+          },
+        },
       },
-      orderBy: { created_at: 'desc' }
+      orderBy: { created_at: "desc" },
     });
 
     return NextResponse.json(reviews);
@@ -29,14 +32,14 @@ export async function GET(
     console.error("Error fetching trail reviews:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
 export async function POST(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -51,7 +54,10 @@ export async function POST(
     const { rating, comment } = body;
 
     if (!rating || rating < 1 || rating > 5) {
-      return NextResponse.json({ error: "Rating must be between 1 and 5" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Rating must be between 1 and 5" },
+        { status: 400 },
+      );
     }
 
     const review = await prisma.trailReview.create({
@@ -67,9 +73,9 @@ export async function POST(
             name: true,
             username: true,
             image: true,
-          }
-        }
-      }
+          },
+        },
+      },
     });
 
     return NextResponse.json(review, { status: 201 });
@@ -77,7 +83,7 @@ export async function POST(
     console.error("Error creating trail review:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

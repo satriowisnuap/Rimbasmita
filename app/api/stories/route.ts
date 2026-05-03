@@ -4,6 +4,9 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { generateSlug } from "@/lib/utils";
 
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
 export async function GET() {
   try {
     const stories = await prisma.story.findMany({
@@ -91,10 +94,7 @@ export async function POST(req: Request) {
     } = body;
 
     if (!title || !title.trim()) {
-      return NextResponse.json(
-        { error: "Title is required" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "Title is required" }, { status: 400 });
     }
 
     if (!content || !content.trim()) {
@@ -124,22 +124,24 @@ export async function POST(req: Request) {
         is_private: isPrivate,
         is_draft: isDraft,
         // Insert tags if any
-        ...(tags && tags.length > 0 && {
-          story_tags: {
-            create: tags.map((tag: string) => ({
-              tag,
-            })),
-          },
-        }),
+        ...(tags &&
+          tags.length > 0 && {
+            story_tags: {
+              create: tags.map((tag: string) => ({
+                tag,
+              })),
+            },
+          }),
         // Insert images if any
-        ...(imageUrls && imageUrls.length > 0 && {
-          story_images: {
-            create: imageUrls.map((url: string, index: number) => ({
-              image_url: url,
-              display_order: index,
-            })),
-          },
-        }),
+        ...(imageUrls &&
+          imageUrls.length > 0 && {
+            story_images: {
+              create: imageUrls.map((url: string, index: number) => ({
+                image_url: url,
+                display_order: index,
+              })),
+            },
+          }),
       },
     });
 

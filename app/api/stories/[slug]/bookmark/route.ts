@@ -3,9 +3,12 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
 export async function POST(
   req: Request,
-  { params }: { params: { slug: string } }
+  { params }: { params: { slug: string } },
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -20,7 +23,7 @@ export async function POST(
     // Find the story by slug
     const story = await prisma.story.findUnique({
       where: { slug },
-      select: { id: true, user_id: true }
+      select: { id: true, user_id: true },
     });
 
     if (!story) {
@@ -32,9 +35,9 @@ export async function POST(
       where: {
         user_id_story_id: {
           user_id: userId,
-          story_id: story.id
-        }
-      }
+          story_id: story.id,
+        },
+      },
     });
 
     if (existingBookmark) {
@@ -44,16 +47,16 @@ export async function POST(
           where: {
             user_id_story_id: {
               user_id: userId,
-              story_id: story.id
-            }
-          }
+              story_id: story.id,
+            },
+          },
         }),
         prisma.story.update({
           where: { id: story.id },
-          data: { bookmarks_count: { decrement: 1 } }
-        })
+          data: { bookmarks_count: { decrement: 1 } },
+        }),
       ]);
-      
+
       return NextResponse.json({ bookmarked: false });
     } else {
       // Add bookmark
@@ -61,13 +64,13 @@ export async function POST(
         prisma.bookmarks.create({
           data: {
             user_id: userId,
-            story_id: story.id
-          }
+            story_id: story.id,
+          },
         }),
         prisma.story.update({
           where: { id: story.id },
-          data: { bookmarks_count: { increment: 1 } }
-        })
+          data: { bookmarks_count: { increment: 1 } },
+        }),
       ]);
 
       // Create notification
@@ -78,14 +81,14 @@ export async function POST(
         type: "bookmark",
         storyId: story.id,
       });
-      
+
       return NextResponse.json({ bookmarked: true });
     }
   } catch (error) {
     console.error("Error toggling bookmark:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -3,9 +3,12 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
 export async function GET(
   req: Request,
-  { params }: { params: { username: string } }
+  { params }: { params: { username: string } },
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -40,7 +43,10 @@ export async function GET(
       },
       select: { likes_count: true },
     });
-    const totalLikes = storiesForLikes.reduce((sum, s) => sum + (s.likes_count || 0), 0);
+    const totalLikes = storiesForLikes.reduce(
+      (sum, s) => sum + (s.likes_count || 0),
+      0,
+    );
 
     const storiesForTrails = await prisma.story.findMany({
       where: {
@@ -49,9 +55,9 @@ export async function GET(
         ...(isOwnProfile ? {} : { is_private: false }),
       },
       select: { trail_id: true },
-      distinct: ['trail_id'],
+      distinct: ["trail_id"],
     });
-    const trailsVisited = storiesForTrails.filter(s => s.trail_id).length;
+    const trailsVisited = storiesForTrails.filter((s) => s.trail_id).length;
 
     const followersCount = await prisma.follows.count({
       where: { following_id: profile.id },
@@ -69,8 +75,8 @@ export async function GET(
           follower_id_following_id: {
             follower_id: currentUserId,
             following_id: profile.id,
-          }
-        }
+          },
+        },
       });
       isFollowing = !!follow;
     }
@@ -84,16 +90,16 @@ export async function GET(
       },
       include: {
         profiles: {
-          select: { name: true, username: true, image: true }
+          select: { name: true, username: true, image: true },
         },
         trails: {
-          select: { name: true, location: true }
+          select: { name: true, location: true },
         },
         story_images: {
-          orderBy: { display_order: 'asc' }
-        }
+          orderBy: { display_order: "asc" },
+        },
       },
-      orderBy: { created_at: 'desc' }
+      orderBy: { created_at: "desc" },
     });
 
     // Fetch bookmarks (separate tab)
@@ -103,24 +109,24 @@ export async function GET(
         stories: {
           include: {
             profiles: {
-              select: { name: true, username: true, image: true }
+              select: { name: true, username: true, image: true },
             },
             trails: {
-              select: { name: true, location: true }
+              select: { name: true, location: true },
             },
             story_images: {
-              orderBy: { display_order: 'asc' }
-            }
-          }
-        }
+              orderBy: { display_order: "asc" },
+            },
+          },
+        },
       },
-      orderBy: { created_at: 'desc' }
+      orderBy: { created_at: "desc" },
     });
 
     // Filter bookmarks for privacy
     const filteredBookmarks = bookmarks
-      .map(b => b.stories)
-      .filter(s => {
+      .map((b) => b.stories)
+      .filter((s) => {
         if (!s) return false;
         if (s.is_draft) return false; // Bookmarks shouldn't be drafts anyway
         if (!s.is_private) return true;
@@ -143,6 +149,9 @@ export async function GET(
     });
   } catch (error) {
     console.error("Error fetching profile data:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 },
+    );
   }
 }

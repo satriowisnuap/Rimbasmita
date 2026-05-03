@@ -3,6 +3,9 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
 export async function PATCH(req: Request) {
   try {
     const session = await getServerSession(authOptions);
@@ -20,11 +23,14 @@ export async function PATCH(req: Request) {
       const existing = await prisma.profile.findFirst({
         where: {
           username: username.toLowerCase(),
-          id: { not: userId }
-        }
+          id: { not: userId },
+        },
       });
       if (existing) {
-        return NextResponse.json({ error: "Username already taken" }, { status: 400 });
+        return NextResponse.json(
+          { error: "Username already taken" },
+          { status: 400 },
+        );
       }
     }
 
@@ -35,19 +41,19 @@ export async function PATCH(req: Request) {
         bio,
         location,
         image,
-        username: username?.toLowerCase()
-      }
+        username: username?.toLowerCase(),
+      },
     });
 
     return NextResponse.json({
       message: "Profile updated successfully",
-      profile: updatedProfile
+      profile: updatedProfile,
     });
   } catch (error) {
     console.error("Error updating profile:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
