@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { ThemeProviderWrapper } from "@/components/theme-provider";
 import { AuthProvider } from "@/components/auth-provider";
+import { Toaster } from "@/components/ui/sonner";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -78,6 +79,7 @@ export default function RootLayout({
         <ThemeProviderWrapper>
           <AuthProvider>
             {children}
+            <Toaster />
 
             {/* Structured Data (Person + Website) */}
             <script

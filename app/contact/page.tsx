@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Mail,
   MessageSquare,
@@ -12,12 +12,14 @@ import {
   CheckCircle2,
   AlertCircle,
 } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -25,8 +27,26 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { toast } from "sonner";
 import emailjs from "@emailjs/browser";
+
+const formSchema = z.object({
+  name: z.string().min(2, { message: "Nama minimal 2 karakter" }),
+  email: z.string().email({ message: "Format email tidak valid" }).min(1, { message: "Email wajib diisi" }),
+  subject: z.string({ required_error: "Silakan pilih subjek" }).min(1, { message: "Silakan pilih subjek" }),
+  message: z.string().min(10, { message: "Pesan minimal 10 karakter" }),
+});
+
+type FormValues = z.infer<typeof formSchema>;
 
 const fadeInUp = {
   initial: { opacity: 0, y: 20 },
@@ -40,86 +60,76 @@ const staggerContainer = {
 
 export default function ContactPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    subject: "",
-    message: "",
+  const [submitStatus, setSubmitStatus] = useState<"idle" | "success" | "error">("idle");
+
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      subject: "",
+      message: "",
+    },
   });
 
-  const handleChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >,
-  ) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const onSubmit = async (values: FormValues) => {
     setIsSubmitting(true);
+    setSubmitStatus("idle");
 
     try {
       const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID!;
       const templateId = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID!;
       const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY!;
 
-      if (serviceId === "YOUR_SERVICE_ID") {
-        console.warn(
-          "EmailJS credentials are not configured. Please set them in your environment variables.",
-        );
-        // For demonstration, we'll simulate a success after a short delay
+      if (serviceId === "YOUR_SERVICE_ID" || !serviceId) {
+        console.warn("EmailJS credentials are not configured.");
         await new Promise((resolve) => setTimeout(resolve, 1500));
-        toast.success("Pesan terkirim! (Mode Simulasi)");
-        setFormData({ name: "", email: "", subject: "", message: "" });
+        setSubmitStatus("success");
+        form.reset();
         setIsSubmitting(false);
         return;
       }
 
-      // Persiapkan parameter untuk kedua email
       const adminParams = {
-        from_name: formData.name,
-        from_email: formData.email,
-        subject: formData.subject,
-        message: formData.message,
+        from_name: values.name,
+        from_email: values.email,
+        subject: values.subject,
+        message: values.message,
         to_email: "rimbasmita@gmail.com",
       };
 
       const userParams = {
-        to_name: formData.name,
-        to_email: formData.email,
+        to_name: values.name,
+        to_email: values.email,
       };
 
-      // Jalankan pengiriman secara paralel
       const emailTasks = [
         emailjs.send(serviceId, templateId, adminParams, publicKey),
       ];
 
-      const autoReplyTemplateId =
-        process.env.NEXT_PUBLIC_EMAILJS_AUTOREPLY_TEMPLATE_ID!;
+      const autoReplyTemplateId = process.env.NEXT_PUBLIC_EMAILJS_AUTOREPLY_TEMPLATE_ID;
       if (autoReplyTemplateId) {
         emailTasks.push(
-          emailjs.send(serviceId, autoReplyTemplateId, userParams, publicKey),
+          emailjs.send(serviceId, autoReplyTemplateId, userParams, publicKey)
         );
       }
 
       const results = await Promise.allSettled(emailTasks);
-
-      // Cek hasil untuk logging
-      results.forEach((result, index) => {
-        if (result.status === "fulfilled") {
-          console.log(`Email ${index + 1} sent successfully`);
-        } else {
-          console.error(`Email ${index + 1} failed:`, result.reason);
-        }
-      });
-
-      toast.success("Terima kasih! Pesan Anda telah berhasil dikirim.");
-      setFormData({ name: "", email: "", subject: "", message: "" });
+      
+      // Admin notification is the priority for success status
+      if (results[0].status === "fulfilled") {
+        setSubmitStatus("success");
+        form.reset();
+        // We still show toast as a secondary notification
+        toast.success("Pesan terkirim!");
+      } else {
+        setSubmitStatus("error");
+        toast.error("Gagal mengirim pesan.");
+      }
     } catch (error) {
       console.error("Error sending email:", error);
-      toast.error("Maaf, terjadi kesalahan. Silakan coba lagi nanti.");
+      setSubmitStatus("error");
+      toast.error("Terjadi kesalahan.");
     } finally {
       setIsSubmitting(false);
     }
@@ -238,125 +248,158 @@ export default function ContactPage() {
                   {/* Decorative background element */}
                   <div className="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
 
-                  <form
-                    onSubmit={handleSubmit}
-                    className="space-y-6 relative z-10"
-                  >
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="space-y-2">
-                        <Label
-                          htmlFor="name"
-                          className="text-sm font-semibold ml-1"
-                        >
-                          Nama Lengkap
-                        </Label>
-                        <div className="relative">
-                          <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                          <Input
-                            id="name"
-                            name="name"
-                            placeholder="Nama Anda"
-                            required
-                            value={formData.name}
-                            onChange={handleChange}
-                            className="pl-10 h-12 rounded-2xl bg-background/50 border-border/50 focus:border-primary focus:ring-primary/20 transition-all"
-                          />
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        <Label
-                          htmlFor="email"
-                          className="text-sm font-semibold ml-1"
-                        >
-                          Alamat Email
-                        </Label>
-                        <div className="relative">
-                          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                          <Input
-                            id="email"
-                            name="email"
-                            type="email"
-                            placeholder="nama@email.com"
-                            required
-                            value={formData.email}
-                            onChange={handleChange}
-                            className="pl-10 h-12 rounded-2xl bg-background/50 border-border/50 focus:border-primary focus:ring-primary/20 transition-all"
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label
-                        htmlFor="subject"
-                        className="text-sm font-semibold ml-1"
-                      >
-                        Subjek
-                      </Label>
-                      <div className="relative">
-                        <Tag className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" />
-                        <Select
-                          value={formData.subject}
-                          onValueChange={(value) =>
-                            setFormData((prev) => ({ ...prev, subject: value }))
-                          }
-                        >
-                          <SelectTrigger className="pl-10 h-12 rounded-2xl bg-background/50 border-border/50 focus:ring-primary/20 transition-all">
-                            <SelectValue placeholder="Pilih Subjek" />
-                          </SelectTrigger>
-                          <SelectContent className="glass-strong rounded-2xl border-border/50 shadow-2xl">
-                            <SelectItem value="Kritik">Kritik</SelectItem>
-                            <SelectItem value="Saran">Saran</SelectItem>
-                            <SelectItem value="Kerja Sama">
-                              Kerja Sama
-                            </SelectItem>
-                            <SelectItem value="Lainnya">Lainnya</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label
-                        htmlFor="message"
-                        className="text-sm font-semibold ml-1"
-                      >
-                        Pesan
-                      </Label>
-                      <Textarea
-                        id="message"
-                        name="message"
-                        placeholder="Tuliskan pesan Anda di sini..."
-                        required
-                        value={formData.message}
-                        onChange={handleChange}
-                        className="min-h-[150px] rounded-2xl bg-background/50 border-border/50 focus:border-primary focus:ring-primary/20 transition-all resize-none p-4"
-                      />
-                    </div>
-
-                    <Button
-                      type="submit"
-                      disabled={isSubmitting}
-                      className="w-full h-14 rounded-2xl text-lg font-bold shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all flex items-center justify-center gap-2"
+                  <Form {...form}>
+                    <form
+                      onSubmit={form.handleSubmit(onSubmit)}
+                      className="space-y-6 relative z-10"
                     >
-                      {isSubmitting ? (
-                        <div className="flex items-center gap-2">
-                          <div className="h-5 w-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
-                          <span>Mengirim...</span>
-                        </div>
-                      ) : (
-                        <>
-                          <span>Kirim Pesan</span>
-                          <Send className="h-5 w-5" />
-                        </>
-                      )}
-                    </Button>
+                      <AnimatePresence mode="wait">
+                        {submitStatus === "success" && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: "auto" }}
+                            exit={{ opacity: 0, height: 0 }}
+                          >
+                            <Alert variant="success" className="mb-6 rounded-2xl border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                              <CheckCircle2 className="h-4 w-4" />
+                              <AlertTitle className="font-bold">Berhasil!</AlertTitle>
+                              <AlertDescription>
+                                Pesan Anda telah berhasil dikirim. Kami akan segera menghubungi Anda.
+                              </AlertDescription>
+                            </Alert>
+                          </motion.div>
+                        )}
 
-                    <p className="text-[10px] text-center text-muted-foreground mt-4 italic">
-                      *Dengan mengirimkan formulir ini, Anda menyetujui pesan
-                      Anda akan dikirim ke tim Rimbasmita.
-                    </p>
-                  </form>
+                        {submitStatus === "error" && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: "auto" }}
+                            exit={{ opacity: 0, height: 0 }}
+                          >
+                            <Alert variant="destructive" className="mb-6 rounded-2xl">
+                              <AlertCircle className="h-4 w-4" />
+                              <AlertTitle className="font-bold">Gagal!</AlertTitle>
+                              <AlertDescription>
+                                Terjadi kesalahan saat mengirim pesan. Silakan coba lagi nanti.
+                              </AlertDescription>
+                            </Alert>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <FormField
+                          control={form.control}
+                          name="name"
+                          render={({ field }) => (
+                            <FormItem className="space-y-2">
+                              <FormLabel className="text-sm font-semibold ml-1">Nama Lengkap</FormLabel>
+                              <div className="relative">
+                                <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                <FormControl>
+                                  <Input
+                                    placeholder="Nama Anda"
+                                    className="pl-10 h-12 rounded-2xl bg-background/50 border-border/50 focus:border-primary focus:ring-primary/20 transition-all"
+                                    {...field}
+                                  />
+                                </FormControl>
+                              </div>
+                              <FormMessage className="ml-1 text-xs" />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="email"
+                          render={({ field }) => (
+                            <FormItem className="space-y-2">
+                              <FormLabel className="text-sm font-semibold ml-1">Alamat Email</FormLabel>
+                              <div className="relative">
+                                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                <FormControl>
+                                  <Input
+                                    placeholder="nama@email.com"
+                                    className="pl-10 h-12 rounded-2xl bg-background/50 border-border/50 focus:border-primary focus:ring-primary/20 transition-all"
+                                    {...field}
+                                  />
+                                </FormControl>
+                              </div>
+                              <FormMessage className="ml-1 text-xs" />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+                      <FormField
+                        control={form.control}
+                        name="subject"
+                        render={({ field }) => (
+                          <FormItem className="space-y-2">
+                            <FormLabel className="text-sm font-semibold ml-1">Subjek</FormLabel>
+                            <div className="relative">
+                              <Tag className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" />
+                              <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
+                                <FormControl>
+                                  <SelectTrigger className="pl-10 h-12 rounded-2xl bg-background/50 border-border/50 focus:ring-primary/20 transition-all text-left">
+                                    <SelectValue placeholder="Pilih Subjek" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent className="glass-strong rounded-2xl border-border/50 shadow-2xl">
+                                  <SelectItem value="Kritik">Kritik</SelectItem>
+                                  <SelectItem value="Saran">Saran</SelectItem>
+                                  <SelectItem value="Kerja Sama">Kerja Sama</SelectItem>
+                                  <SelectItem value="Lainnya">Lainnya</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <FormMessage className="ml-1 text-xs" />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="message"
+                        render={({ field }) => (
+                          <FormItem className="space-y-2">
+                            <FormLabel className="text-sm font-semibold ml-1">Pesan</FormLabel>
+                            <FormControl>
+                              <Textarea
+                                placeholder="Tuliskan pesan Anda di sini..."
+                                className="min-h-[150px] rounded-2xl bg-background/50 border-border/50 focus:border-primary focus:ring-primary/20 transition-all resize-none p-4"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage className="ml-1 text-xs" />
+                          </FormItem>
+                        )}
+                      />
+
+                      <Button
+                        type="submit"
+                        disabled={isSubmitting}
+                        className="w-full h-14 rounded-2xl text-lg font-bold shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all flex items-center justify-center gap-2"
+                      >
+                        {isSubmitting ? (
+                          <div className="flex items-center gap-2">
+                            <div className="h-5 w-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                            <span>Mengirim...</span>
+                          </div>
+                        ) : (
+                          <>
+                            <span>Kirim Pesan</span>
+                            <Send className="h-5 w-5" />
+                          </>
+                        )}
+                      </Button>
+
+                      <p className="text-[10px] text-center text-muted-foreground mt-4 italic">
+                        *Dengan mengirimkan formulir ini, Anda menyetujui pesan
+                        Anda akan dikirim ke tim Rimbasmita.
+                      </p>
+                    </form>
+                  </Form>
                 </div>
               </motion.div>
             </div>
