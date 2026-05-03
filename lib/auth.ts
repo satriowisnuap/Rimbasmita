@@ -132,13 +132,14 @@ export const authOptions: NextAuthOptions = {
       if (user?.email) {
         const { data } = await supabase
           .from("profiles")
-          .select("id, username")
+          .select("id, username, role")
           .eq("email", user.email.toLowerCase())
           .single();
 
         if (data) {
           token.id = data.id;
           token.username = data.username;
+          token.role = data.role;
         }
       }
 
@@ -150,6 +151,7 @@ export const authOptions: NextAuthOptions = {
       if (session.user) {
         (session.user as any).id = token.id ?? null;
         (session.user as any).username = token.username ?? null;
+        (session.user as any).role = token.role ?? null;
       }
       return session;
     },
