@@ -38,7 +38,7 @@ type MoodFilter =
   | "exhilarated"
   | "grateful"
   | "challenged";
-type DifficultyFilter = "all" | "easy" | "moderate" | "hard";
+type DifficultyFilter = "all" | "easy" | "moderate" | "hard" | "extreme";
 
 export default function StoriesPage() {
   const [stories, setStories] = useState<StoryCard[]>([]);

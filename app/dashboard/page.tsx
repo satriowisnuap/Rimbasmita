@@ -20,6 +20,7 @@ export default function DashboardPage() {
     userImage,
     isDevMode,
     username,
+    role,
   } = useDashboard();
 
   const [alert, setAlert] = useState<any>(null);
@@ -78,6 +79,7 @@ export default function DashboardPage() {
               userImage={userImage}
               username={username}
               stats={stats}
+              role={role}
             />
             <DashboardFeed
               stories={stories}

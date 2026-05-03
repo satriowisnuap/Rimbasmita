@@ -14,12 +14,14 @@ import {
   User,
   FileText,
   ArrowRight,
+  Shield,
 } from "lucide-react";
 
 interface Props {
   userName?: string;
   userImage?: string;
   username?: string;
+  role?: string | null;
   stats?: {
     totalStories: number;
     totalLikes: number;
@@ -37,7 +39,8 @@ export function DashboardSidebar(props: Props) {
   const username = props.username ?? user?.username;
   const userName = props.userName ?? user?.name ?? "Pendaki";
   const userImage = props.userImage ?? user?.image;
-  
+  const role = props.role ?? null;
+
   const stats = props.stats || {
     totalStories: 0,
     totalLikes: 0,
@@ -102,6 +105,31 @@ export function DashboardSidebar(props: Props) {
             </Link>
           </div>
         </motion.div>
+
+        {/* Admin Panel — only visible for admins */}
+        {role === "admin" && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.05 }}
+            className="rounded-2xl overflow-hidden border border-primary/20 bg-primary/5"
+          >
+            <div className="flex items-center gap-2 px-4 py-3 border-b border-primary/10">
+              <Shield className="h-4 w-4 text-primary" />
+              <span className="text-xs font-bold text-primary uppercase tracking-wider">Admin Panel</span>
+            </div>
+            <div className="p-3 space-y-1">
+              <Link
+                href="/admin/trails"
+                className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl font-medium text-sm text-foreground hover:bg-primary/10 hover:text-primary transition-all duration-300 group"
+              >
+                <Mountain className="h-4 w-4 text-primary/70" />
+                <span>Manajemen Jalur</span>
+                <ArrowRight className="h-3.5 w-3.5 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+              </Link>
+            </div>
+          </motion.div>
+        )}
 
         {/* Stats */}
         <motion.div
