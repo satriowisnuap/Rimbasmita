@@ -1,8 +1,17 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
+async function getPrisma() {
+  const { prisma } = await import("@/lib/prisma");
+  return prisma;
+}
 
 export async function GET() {
   try {
+    const prisma = await getPrisma(); // ✅ FIX
+
     const trails = await prisma.trail.findMany({
       include: {
         _count: {
@@ -11,26 +20,30 @@ export async function GET() {
               where: {
                 is_private: false,
                 is_draft: false,
-              }
+              },
             },
             trail_reviews: true,
-          }
+          },
         },
         trail_reviews: {
           select: {
             rating: true,
-          }
-        }
+          },
+        },
       },
       take: 20,
     });
 
     const sortedTrails = trails
       .map((trail) => {
-        const totalActivity = (trail._count.stories || 0) + (trail._count.trail_reviews || 0);
-        const avgRating = trail.trail_reviews.length > 0
-          ? trail.trail_reviews.reduce((acc, r) => acc + r.rating, 0) / trail.trail_reviews.length
-          : 0;
+        const totalActivity =
+          (trail._count.stories || 0) + (trail._count.trail_reviews || 0);
+
+        const avgRating =
+          trail.trail_reviews.length > 0
+            ? trail.trail_reviews.reduce((acc, r) => acc + r.rating, 0) /
+              trail.trail_reviews.length
+            : 0;
 
         return {
           ...trail,
@@ -48,7 +61,7 @@ export async function GET() {
     console.error("Error fetching top trails:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

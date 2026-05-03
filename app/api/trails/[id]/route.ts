@@ -1,14 +1,20 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
+async function getPrisma() {
+  const { prisma } = await import("@/lib/prisma");
+  return prisma;
+}
+
 export async function GET(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   try {
+    const prisma = await getPrisma(); // ✅ FIX
+
     const { id } = params;
 
     const trail = await prisma.trail.findUnique({
@@ -25,22 +31,22 @@ export async function GET(
                 name: true,
                 username: true,
                 image: true,
-              }
+              },
             },
             story_images: {
-              orderBy: { display_order: 'asc' },
-              take: 1
+              orderBy: { display_order: "asc" },
+              take: 1,
             },
             trails: {
               select: {
                 name: true,
                 location: true,
-              }
-            }
+              },
+            },
           },
-          orderBy: { created_at: 'desc' }
-        }
-      }
+          orderBy: { created_at: "desc" },
+        },
+      },
     });
 
     if (!trail) {
@@ -52,7 +58,7 @@ export async function GET(
     console.error("Error fetching trail detail:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

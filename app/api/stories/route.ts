@@ -1,14 +1,20 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
 import { generateSlug } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
+async function getPrisma() {
+  const { prisma } = await import("@/lib/prisma");
+  return prisma;
+}
+
 export async function GET() {
   try {
+    const prisma = await getPrisma(); // ✅ FIX
+
     const stories = await prisma.story.findMany({
       where: {
         is_draft: false,
@@ -68,6 +74,8 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
+    const prisma = await getPrisma(); // ✅ FIX
+
     const session = await getServerSession(authOptions);
 
     if (!session || !(session.user as any)?.id) {
@@ -123,7 +131,6 @@ export async function POST(req: Request) {
         warnings: warnings?.trim() || null,
         is_private: isPrivate,
         is_draft: isDraft,
-        // Insert tags if any
         ...(tags &&
           tags.length > 0 && {
             story_tags: {
@@ -132,7 +139,6 @@ export async function POST(req: Request) {
               })),
             },
           }),
-        // Insert images if any
         ...(imageUrls &&
           imageUrls.length > 0 && {
             story_images: {
@@ -149,7 +155,6 @@ export async function POST(req: Request) {
   } catch (error: any) {
     console.error("Error creating story:", error);
 
-    // Check for unique constraint violation (P2002)
     if (error.code === "P2002") {
       return NextResponse.json(
         { error: "A story with a similar title already exists." },

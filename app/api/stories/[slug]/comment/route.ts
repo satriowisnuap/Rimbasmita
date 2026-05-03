@@ -1,10 +1,14 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
+
+async function getPrisma() {
+  const { prisma } = await import("@/lib/prisma");
+  return prisma;
+}
 
 // GET stub — required by Next.js 13 build for dynamic routes
 export async function GET() {
@@ -16,6 +20,8 @@ export async function POST(
   { params }: { params: { slug: string } },
 ) {
   try {
+    const prisma = await getPrisma(); // ✅ FIX
+
     const session = await getServerSession(authOptions);
 
     if (!session || !(session.user as any)?.id) {
@@ -76,7 +82,9 @@ export async function POST(
       actorId: userId,
       type: "comment",
       storyId: story.id,
-      message: `mengomentari: "${content.trim().substring(0, 50)}${content.trim().length > 50 ? "..." : ""}"`,
+      message: `mengomentari: "${content.trim().substring(0, 50)}${
+        content.trim().length > 50 ? "..." : ""
+      }"`,
     });
 
     return NextResponse.json({ comment }, { status: 201 });

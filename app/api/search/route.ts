@@ -1,11 +1,17 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
+async function getPrisma() {
+  const { prisma } = await import("@/lib/prisma");
+  return prisma;
+}
+
 export async function GET(req: Request) {
   try {
+    const prisma = await getPrisma(); // ✅ FIX
+
     const { searchParams } = new URL(req.url);
     const q = searchParams.get("q");
 
@@ -76,7 +82,7 @@ export async function GET(req: Request) {
     console.error("Search API Error:", error);
     return NextResponse.json(
       { error: "Internal Server Error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
