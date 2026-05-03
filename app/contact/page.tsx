@@ -61,7 +61,6 @@ export default function ContactPage() {
     setIsSubmitting(true);
 
     try {
-      
       const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID!;
       const templateId = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID!;
       const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY!;
@@ -283,7 +282,9 @@ export default function ContactPage() {
                           <SelectContent className="glass-strong rounded-2xl border-border/50 shadow-2xl">
                             <SelectItem value="Kritik">Kritik</SelectItem>
                             <SelectItem value="Saran">Saran</SelectItem>
-                            <SelectItem value="Kerja Sama">Kerja Sama</SelectItem>
+                            <SelectItem value="Kerja Sama">
+                              Kerja Sama
+                            </SelectItem>
                             <SelectItem value="Lainnya">Lainnya</SelectItem>
                           </SelectContent>
                         </Select>
