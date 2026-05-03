@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase";
 import { generateSlug } from "@/lib/utils";
 
 interface SubmitParams {
@@ -62,59 +61,34 @@ export function useSubmitStory() {
     const slug = generateSlug(title);
 
     try {
-      const { data, error: insertError } = await supabase
-        .from("stories")
-        .insert({
-          user_id: (session!.user as any).id,
+      const response = await fetch("/api/stories", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
           title: title.trim(),
-          slug,
           content: content.trim(),
-          excerpt: content.trim().substring(0, 200),
-          trail_id: selectedTrail || null,
+          selectedTrail: selectedTrail || null,
           difficulty: difficulty || null,
           duration: duration.trim() || null,
           elevation: elevation.trim() || null,
           mood: mood || null,
           tips: tips.trim() || null,
           warnings: warnings.trim() || null,
-          is_private: isPrivate,
-          is_draft: draft,
-        })
-        .select()
-        .single();
+          isPrivate: isPrivate,
+          isDraft: draft,
+          tags: tags,
+          imageUrls: imageUrls,
+        }),
+      });
 
-      if (insertError) {
-        if (insertError.code === "23505") {
-          setError(
-            "A story with a similar title already exists. Please try a different title.",
-          );
-        } else {
-          setError(`Failed to create story: ${insertError.message}`);
-        }
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.error || "Failed to create story");
         setIsSubmitting(false);
         return;
-      }
-
-      const storyId = data.id;
-
-      if (tags.length > 0) {
-        const { error: tagsError } = await supabase
-          .from("story_tags")
-          .insert(tags.map((tag) => ({ story_id: storyId, tag })));
-        if (tagsError) console.error("Error inserting tags:", tagsError);
-      }
-
-      if (imageUrls.length > 0) {
-        const { error: imagesError } = await supabase
-          .from("story_images")
-          .insert(
-            imageUrls.map((url, index) => ({
-              story_id: storyId,
-              image_url: url,
-              display_order: index,
-            })),
-          );
-        if (imagesError) console.error("Error inserting images:", imagesError);
       }
 
       router.push(`/story/${slug}`);
