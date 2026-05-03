@@ -11,7 +11,7 @@ datasource db {
 }
 
 model Profile {
-  id                                             String              @id @db.Uuid
+  id                                             String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   username                                       String?             @unique
   name                                           String?             @default("")
   email                                          String?             @default("")
@@ -22,6 +22,8 @@ model Profile {
   created_at                                     DateTime?           @default(now()) @db.Timestamptz(6)
   updated_at                                     DateTime?           @default(now()) @db.Timestamptz(6)
   role                                           String?             @default("user")
+  password                                       String?
+  email_verified                                 Boolean?            @default(false)
   bookmarks                                      bookmarks[]
   comments                                       comments[]
   follows_follows_follower_idToprofiles          follows[]           @relation("follows_follower_idToprofiles")
@@ -29,7 +31,6 @@ model Profile {
   likes                                          likes[]
   notifications_notifications_actor_idToprofiles notifications[]     @relation("notifications_actor_idToprofiles")
   notifications_notifications_user_idToprofiles  notifications[]     @relation("notifications_user_idToprofiles")
-  users                                          users               @relation(fields: [id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   stories                                        Story[]
   user_achievements                              user_achievements[]
 
@@ -91,6 +92,7 @@ model Trail {
   latitude           Decimal?  @db.Decimal(10, 7)
   longitude          Decimal?  @db.Decimal(10, 7)
   created_at         DateTime? @default(now()) @db.Timestamptz(6)
+  image              String?
   stories            Story[]
 
   @@index([difficulty], map: "idx_trails_difficulty")
@@ -537,7 +539,6 @@ model users {
   sessions                    sessions[]
   webauthn_challenges         webauthn_challenges[]
   webauthn_credentials        webauthn_credentials[]
-  profiles                    Profile?
 
   @@index([created_at(sort: Desc)], map: "idx_users_created_at_desc")
   @@index([email], map: "idx_users_email")
@@ -713,6 +714,19 @@ model user_achievements {
   profiles       Profile      @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@unique([user_id, achievement_id])
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model email_verifications {
+  id       String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email    String?
+  password String?
+  code     String?
+  expired  BigInt?
+  username String?
+  name     String?
+
   @@schema("public")
 }
 
