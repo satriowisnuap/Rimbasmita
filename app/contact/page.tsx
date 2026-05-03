@@ -77,18 +77,43 @@ export default function ContactPage() {
         return;
       }
 
-      await emailjs.send(
-        serviceId,
-        templateId,
-        {
-          from_name: formData.name,
-          from_email: formData.email,
-          subject: formData.subject,
-          message: formData.message,
-          to_email: "rimbasmita@gmail.com",
-        },
-        publicKey,
-      );
+      // Persiapkan parameter untuk kedua email
+      const adminParams = {
+        from_name: formData.name,
+        from_email: formData.email,
+        subject: formData.subject,
+        message: formData.message,
+        to_email: "rimbasmita@gmail.com",
+      };
+
+      const userParams = {
+        to_name: formData.name,
+        to_email: formData.email,
+      };
+
+      // Jalankan pengiriman secara paralel
+      const emailTasks = [
+        emailjs.send(serviceId, templateId, adminParams, publicKey),
+      ];
+
+      const autoReplyTemplateId =
+        process.env.NEXT_PUBLIC_EMAILJS_AUTOREPLY_TEMPLATE_ID!;
+      if (autoReplyTemplateId) {
+        emailTasks.push(
+          emailjs.send(serviceId, autoReplyTemplateId, userParams, publicKey),
+        );
+      }
+
+      const results = await Promise.allSettled(emailTasks);
+
+      // Cek hasil untuk logging
+      results.forEach((result, index) => {
+        if (result.status === "fulfilled") {
+          console.log(`Email ${index + 1} sent successfully`);
+        } else {
+          console.error(`Email ${index + 1} failed:`, result.reason);
+        }
+      });
 
       toast.success("Terima kasih! Pesan Anda telah berhasil dikirim.");
       setFormData({ name: "", email: "", subject: "", message: "" });
