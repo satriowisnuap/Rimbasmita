@@ -3,7 +3,7 @@
 import HeroSection from "@/components/homepage/page/hero-section";
 import FeaturesSection from "@/components/homepage/page/features-section";
 import TrailsSection from "@/components/homepage/page/trails-section";
-import TestimonialsSection from "@/components/homepage/page/testimonials-section";
+import TestimonialsSection from "@/components/homepage/page/story-section";
 import FinalCTASection from "@/components/homepage/page/final-cta-section";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
