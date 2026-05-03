@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import Link from "next/link";
 import {
   User,
   MapPin,
@@ -9,6 +10,7 @@ import {
   Mountain,
   Users,
   Loader as Loader2,
+  Settings,
 } from "lucide-react";
 import type { Profile } from "@/hooks/profile/use-profile";
 
@@ -89,13 +91,16 @@ export function ProfileHeader({
           {/* Follow / Edit button */}
           <div className="mt-4">
             {isOwnProfile ? (
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="px-6 py-2.5 rounded-xl glass text-sm font-medium text-foreground hover:bg-accent/50 transition-all duration-300"
-              >
-                Edit Profil
-              </motion.button>
+              <Link href="/profile/edit">
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl glass text-sm font-medium text-foreground hover:bg-accent/50 transition-all duration-300"
+                >
+                  <Settings className="h-4 w-4" />
+                  Edit Profil
+                </motion.button>
+              </Link>
             ) : (
               session && (
                 <motion.button

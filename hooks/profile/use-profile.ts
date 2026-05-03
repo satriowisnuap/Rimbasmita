@@ -128,26 +128,19 @@ export function useProfile(): UseProfileReturn {
       setProfile(data);
 
       // Fetch stats in parallel
-      const [storiesRes, likesRes, trailsRes, followersRes, followingRes] =
+      const storiesQuery = supabase
+        .from("stories")
+        .select("id, likes_count, trail_id", { count: "exact" })
+        .eq("user_id", data.id)
+        .eq("is_draft", false);
+
+      if (currentUserId !== data.id) {
+        storiesQuery.eq("is_private", false);
+      }
+
+      const [storiesRes, followersRes, followingRes] =
         await Promise.all([
-          supabase
-            .from("stories")
-            .select("id", { count: "exact" })
-            .eq("user_id", data.id)
-            .eq("is_private", false)
-            .eq("is_draft", false),
-          supabase
-            .from("stories")
-            .select("likes_count")
-            .eq("user_id", data.id)
-            .eq("is_private", false)
-            .eq("is_draft", false),
-          supabase
-            .from("stories")
-            .select("trail_id")
-            .eq("user_id", data.id)
-            .eq("is_private", false)
-            .eq("is_draft", false),
+          storiesQuery,
           supabase
             .from("follows")
             .select("id", { count: "exact" })
@@ -160,10 +153,10 @@ export function useProfile(): UseProfileReturn {
 
       setStoriesCount(storiesRes.count || 0);
       setTotalLikes(
-        (likesRes.data || []).reduce((sum, s) => sum + (s.likes_count || 0), 0),
+        (storiesRes.data || []).reduce((sum: number, s: any) => sum + (s.likes_count || 0), 0),
       );
       const uniqueTrails = new Set(
-        (trailsRes.data || []).map((t) => t.trail_id).filter(Boolean),
+        (storiesRes.data || []).map((t: any) => t.trail_id).filter(Boolean),
       );
       setTrailsVisited(uniqueTrails.size);
       setFollowersCount(followersRes.count || 0);
@@ -190,23 +183,28 @@ export function useProfile(): UseProfileReturn {
   }, [username, currentUserId]);
 
   // Fetch stories for active tab
-  const fetchStories = useCallback(async () => {
+    const fetchStories = useCallback(async () => {
     if (!profile) return;
 
     setStoriesLoading(true);
 
     if (activeTab === "cerita") {
-      const { data, error } = await supabase
+      let query = supabase
         .from("stories")
         .select(
-          `id, title, slug, excerpt, difficulty, duration, mood, likes_count, comments_count, created_at,
+          `id, title, slug, excerpt, difficulty, duration, mood, likes_count, comments_count, created_at, is_private, is_draft,
           trails:trail_id(name, location),
           story_images(image_url, display_order)`,
         )
         .eq("user_id", profile.id)
-        .eq("is_private", false)
-        .eq("is_draft", false)
-        .order("created_at", { ascending: false });
+        .eq("is_draft", false);
+
+      // Only show private stories if it's the owner's profile
+      if (!isOwnProfile) {
+        query = query.eq("is_private", false);
+      }
+
+      const { data, error } = await query.order("created_at", { ascending: false });
 
       if (!error && data) {
         setStories(
@@ -219,6 +217,7 @@ export function useProfile(): UseProfileReturn {
                 image: profile.image,
               },
             ],
+            trails: Array.isArray(s.trails) ? s.trails : s.trails ? [s.trails] : null,
           })),
         );
       }
@@ -226,7 +225,7 @@ export function useProfile(): UseProfileReturn {
       const { data, error } = await supabase
         .from("bookmarks")
         .select(
-          `story_id, stories(id, title, slug, excerpt, difficulty, duration, mood, likes_count, comments_count, created_at,
+          `story_id, stories(id, title, slug, excerpt, difficulty, duration, mood, likes_count, comments_count, created_at, is_private, is_draft,
           profiles:user_id(name, username, image),
           trails:trail_id(name, location),
           story_images(image_url, display_order))`,
@@ -258,7 +257,7 @@ export function useProfile(): UseProfileReturn {
     }
 
     setStoriesLoading(false);
-  }, [profile, activeTab]);
+  }, [profile, activeTab, isOwnProfile]);
 
   useEffect(() => {
     if (profile) {
