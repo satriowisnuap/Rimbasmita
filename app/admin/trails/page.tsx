@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
+import Image from "next/image";
 import {
   Mountain,
   Plus,
@@ -77,6 +78,7 @@ export default function AdminTrailsPage() {
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState("");
+  const [imgError, setImgError] = useState(false);
 
   // Delete confirmation
   const [deleteTarget, setDeleteTarget] = useState<Trail | null>(null);
@@ -149,6 +151,7 @@ export default function AdminTrailsPage() {
     setEditingTrail(null);
     setForm(emptyForm);
     setFormError("");
+    setImgError(false);
     setModalOpen(true);
   };
 
@@ -165,6 +168,7 @@ export default function AdminTrailsPage() {
       image: trail.image ?? "",
     });
     setFormError("");
+    setImgError(false);
     setModalOpen(true);
   };
 
@@ -510,10 +514,38 @@ export default function AdminTrailsPage() {
                 <FormField label="URL Gambar">
                   <input
                     value={form.image}
-                    onChange={(e) => setForm({ ...form, image: e.target.value })}
+                    onChange={(e) => {
+                      setForm({ ...form, image: e.target.value });
+                      setImgError(false);
+                    }}
                     placeholder="https://..."
                     className="input-field"
                   />
+                  {/* Live preview using next/image */}
+                  {form.image && !imgError && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="mt-3 relative w-full h-44 rounded-xl overflow-hidden border border-border/40 bg-accent/20"
+                    >
+                      <Image
+                        src={form.image}
+                        alt="Preview gambar jalur"
+                        fill
+                        sizes="(max-width: 672px) 100vw, 672px"
+                        className="object-cover"
+                        onError={() => setImgError(true)}
+                        unoptimized={false}
+                      />
+                    </motion.div>
+                  )}
+                  {form.image && imgError && (
+                    <p className="mt-2 text-xs text-red-400 flex items-center gap-1.5">
+                      <AlertTriangle className="h-3.5 w-3.5" />
+                      URL gambar tidak valid atau tidak dapat dimuat.
+                    </p>
+                  )}
                 </FormField>
 
                 <FormField label="Deskripsi">
