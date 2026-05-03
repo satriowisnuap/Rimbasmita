@@ -8,6 +8,8 @@ import { PenLine, Loader as Loader2, AlertCircle } from "lucide-react";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { EditStoryForm } from "@/components/story/edit-story-form";
+import { useAlert } from "@/components/ui/use-alert";
+import { AlertModal } from "@/components/ui/alert-modal";
 
 const fadeInUp = {
   initial: { opacity: 0, y: 20 },
@@ -20,6 +22,7 @@ export default function EditStoryPage() {
   const router = useRouter();
   const params = useParams();
   const slug = params.slug as string;
+  const { state: alert } = useAlert();
 
   const [storyData, setStoryData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -116,6 +119,12 @@ export default function EditStoryPage() {
 
   return (
     <div className="min-h-screen bg-background">
+      <AlertModal
+        open={!!alert?.open}
+        type={alert?.type}
+        title={alert?.title}
+        message={alert?.message || ""}
+      />
       <Navbar />
       <main className="pt-24 pb-16 px-4">
         <div className="max-w-3xl mx-auto">

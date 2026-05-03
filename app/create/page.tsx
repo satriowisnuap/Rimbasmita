@@ -8,6 +8,8 @@ import { PenLine, Loader as Loader2 } from "lucide-react";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { CreateStoryForm } from "@/components/story/create-story-form";
+import { useAlert } from "@/components/ui/use-alert";
+import { AlertModal } from "@/components/ui/alert-modal";
 
 const fadeInUp = {
   initial: { opacity: 0, y: 20 },
@@ -18,6 +20,7 @@ const fadeInUp = {
 export default function CreateStoryPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const { state: alert } = useAlert();
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -37,6 +40,12 @@ export default function CreateStoryPage() {
 
   return (
     <div className="min-h-screen bg-background">
+      <AlertModal
+        open={!!alert?.open}
+        type={alert?.type}
+        title={alert?.title}
+        message={alert?.message || ""}
+      />
       <Navbar />
       <main className="pt-24 pb-16 px-4">
         <div className="max-w-3xl mx-auto">

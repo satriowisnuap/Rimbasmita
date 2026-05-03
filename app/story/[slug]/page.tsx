@@ -20,6 +20,8 @@ import {
 } from "lucide-react";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
+import { useAlert } from "@/components/ui/use-alert";
+import { AlertModal } from "@/components/ui/alert-modal";
 import {
   useStoryDetail,
   difficultyColor,
@@ -59,6 +61,7 @@ export default function StoryDetailPage() {
     formatTime,
     handleBack,
   } = useStoryDetail();
+  const { state: alert } = useAlert();
 
   // Loading state
   if (loading) {
@@ -105,6 +108,12 @@ export default function StoryDetailPage() {
 
   return (
     <div className="min-h-screen bg-background">
+      <AlertModal
+        open={!!alert?.open}
+        type={alert?.type}
+        title={alert?.title}
+        message={alert?.message || ""}
+      />
       <Navbar />
 
       <motion.main

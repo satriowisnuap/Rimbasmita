@@ -4,6 +4,8 @@ import { Mountain, User } from "lucide-react";
 import { motion } from "framer-motion";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
+import { useAlert } from "@/components/ui/use-alert";
+import { AlertModal } from "@/components/ui/alert-modal";
 import { useProfile } from "@/hooks/profile/use-profile";
 import { ProfileHeader } from "@/components/profile/profile-header";
 import { ProfileTabs } from "@/components/profile/profile-tabs";
@@ -31,6 +33,7 @@ export default function ProfilePage() {
     session,
     getCoverImage,
   } = useProfile();
+  const { state: alert } = useAlert();
 
   // Loading state
   if (loading) {
@@ -74,6 +77,12 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-background">
+      <AlertModal
+        open={!!alert?.open}
+        type={alert?.type}
+        title={alert?.title}
+        message={alert?.message || ""}
+      />
       <Navbar />
 
       <main className="pt-24 pb-16 px-4 sm:px-6 lg:px-8">

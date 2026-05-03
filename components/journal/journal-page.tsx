@@ -9,8 +9,11 @@ import { useDeleteStory } from "@/hooks/journal/use-delete-story";
 import { JournalHeroSection } from "@/components/journal/journal-hero-section";
 import { JournalStoryList } from "@/components/journal/journal-story-list";
 import { DeleteConfirmModal } from "@/components/journal/delete-confirm-modal";
+import { useAlert } from "@/components/ui/use-alert";
+import { AlertModal } from "@/components/ui/alert-modal";
 
 export function JournalPage() {
+  const { state: alert } = useAlert();
   const [activeTab, setActiveTab] = useState<TabKey>("terbit");
 
   const { publishedStories, drafts, loading, removeStory } = useJournalStories();
@@ -24,6 +27,12 @@ export function JournalPage() {
 
   return (
     <div className="min-h-screen bg-background">
+      <AlertModal
+        open={!!alert?.open}
+        type={alert?.type}
+        title={alert?.title}
+        message={alert?.message || ""}
+      />
       <Navbar />
 
       <JournalHeroSection

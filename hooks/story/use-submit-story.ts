@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { generateSlug } from "@/lib/utils";
+import { useAlert } from "@/components/ui/use-alert";
 
 interface SubmitParams {
   title: string;
@@ -21,6 +22,7 @@ interface SubmitParams {
 export function useSubmitStory() {
   const { data: session } = useSession();
   const router = useRouter();
+  const { showAlert } = useAlert();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDraft, setIsDraft] = useState(false);
   const [error, setError] = useState("");
@@ -91,6 +93,14 @@ export function useSubmitStory() {
         return;
       }
 
+      showAlert({
+        type: "success",
+        title: draft ? "Draft disimpan" : "Cerita terbit",
+        message: draft 
+          ? "Cerita kamu telah disimpan sebagai draft." 
+          : "Cerita kamu berhasil diterbitkan dan dapat dilihat oleh publik.",
+      });
+
       router.push(`/story/${slug}`);
     } catch (err) {
       console.error("Unexpected error:", err);
@@ -158,6 +168,14 @@ export function useSubmitStory() {
         setIsSubmitting(false);
         return;
       }
+
+      showAlert({
+        type: "success",
+        title: draft ? "Draft diperbarui" : "Cerita diperbarui",
+        message: draft 
+          ? "Draft cerita kamu telah diperbarui." 
+          : "Cerita kamu berhasil diperbarui.",
+      });
 
       router.push(`/story/${slug}`);
       router.refresh();

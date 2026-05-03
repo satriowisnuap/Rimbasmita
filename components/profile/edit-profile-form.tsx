@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { User, MapPin, AlignLeft, AtSign, Save, Loader as Loader2, Image as ImageIcon } from "lucide-react";
 import { ErrorBanner } from "@/components/error-banner";
+import { useAlert } from "@/components/ui/use-alert";
+import { AlertModal } from "@/components/ui/alert-modal";
 
 interface EditProfileFormProps {
   initialData: {
@@ -18,6 +20,7 @@ interface EditProfileFormProps {
 
 export function EditProfileForm({ initialData }: EditProfileFormProps) {
   const router = useRouter();
+  const { state: alert, showAlert } = useAlert();
   const [name, setName] = useState(initialData.name);
   const [username, setUsername] = useState(initialData.username);
   const [bio, setBio] = useState(initialData.bio || "");
@@ -46,6 +49,12 @@ export function EditProfileForm({ initialData }: EditProfileFormProps) {
       }
 
       // Success
+      showAlert({
+        type: "success",
+        title: "Profil diperbarui",
+        message: "Informasi profil Anda berhasil diperbarui.",
+      });
+      
       router.push(`/profile/${username.toLowerCase()}`);
       router.refresh();
     } catch (err) {
@@ -58,6 +67,12 @@ export function EditProfileForm({ initialData }: EditProfileFormProps) {
 
   return (
     <div className="space-y-6">
+      <AlertModal
+        open={!!alert?.open}
+        type={alert?.type}
+        title={alert?.title}
+        message={alert?.message || ""}
+      />
       <ErrorBanner error={error} onClose={() => setError("")} />
 
       <form onSubmit={handleSubmit} className="space-y-6">
