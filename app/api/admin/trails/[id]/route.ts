@@ -18,17 +18,27 @@ async function requireAdmin() {
   return { error: null, status: 200 };
 }
 
+export const dynamic = "force-dynamic";
 // PATCH — update trail
 export async function PATCH(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   const { error, status } = await requireAdmin();
   if (error) return NextResponse.json({ error }, { status });
 
   try {
     const body = await req.json();
-    const { name, location, region, elevation, difficulty, estimated_duration, description, image } = body;
+    const {
+      name,
+      location,
+      region,
+      elevation,
+      difficulty,
+      estimated_duration,
+      description,
+      image,
+    } = body;
 
     const trail = await prisma.trail.update({
       where: { id: params.id },
@@ -47,23 +57,36 @@ export async function PATCH(
     return NextResponse.json({ trail });
   } catch (err) {
     console.error("Error updating trail:", err);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
   }
 }
 
 // DELETE — delete trail
 export async function DELETE(
   _req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   const { error, status } = await requireAdmin();
   if (error) return NextResponse.json({ error }, { status });
 
   try {
+    const existing = await prisma.trail.findUnique({
+      where: { id: params.id },
+    });
+
+    if (!existing) {
+      return NextResponse.json({ error: "Trail not found" }, { status: 404 });
+    }
     await prisma.trail.delete({ where: { id: params.id } });
     return NextResponse.json({ success: true });
   } catch (err) {
     console.error("Error deleting trail:", err);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
   }
 }
