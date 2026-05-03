@@ -20,6 +20,7 @@ export function useNavbar() {
   const username = session?.user?.username;
   const isDashboard = pathname.startsWith("/dashboard");
   const isProfile = pathname.startsWith("/profile");
+  const isHome = pathname === "/";
 
   const navLinks = user
     ? [
@@ -44,6 +45,7 @@ export function useNavbar() {
     theme,
     isDashboard,
     isProfile,
+    isHome,
     navLinks,
     mobileMenuOpen,
     searchOpen,

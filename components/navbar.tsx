@@ -25,6 +25,7 @@ export function Navbar() {
     theme,
     isDashboard,
     isProfile,
+    isHome,
     navLinks,
     mobileMenuOpen,
     searchOpen,
@@ -35,8 +36,38 @@ export function Navbar() {
   } = useNavbar();
 
   const [mounted, setMounted] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<{
+    stories: any[];
+    trails: any[];
+    authors: any[];
+  }>({ stories: [], trails: [], authors: [] });
+  const [isSearching, setIsSearching] = useState(false);
+
   useEffect(() => setMounted(true), []);
   const router = useRouter();
+
+  // Search logic
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(async () => {
+      if (searchQuery.length >= 2) {
+        setIsSearching(true);
+        try {
+          const res = await fetch(`/api/search?q=${encodeURIComponent(searchQuery)}`);
+          const data = await res.json();
+          setSearchResults(data);
+        } catch (error) {
+          console.error("Search error:", error);
+        } finally {
+          setIsSearching(false);
+        }
+      } else {
+        setSearchResults({ stories: [], trails: [], authors: [] });
+      }
+    }, 300);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchQuery]);
 
   return (
     <>
@@ -45,7 +76,7 @@ export function Navbar() {
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
             <Link
-              href={user ? "/" : "/"}
+              href="/"
               className="flex items-center gap-2 group"
             >
               <Mountain className="h-7 w-7 text-primary transition-transform group-hover:scale-110" />
@@ -55,25 +86,23 @@ export function Navbar() {
             </Link>
 
             {/* Desktop Nav */}
-            {isProfile && isDashboard ? null : (
-              <div className="hidden md:flex items-center gap-1">
-                {navLinks.map((link) => (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-all duration-300"
-                  >
-                    <link.icon className="h-4 w-4" />
-                    {link.label}
-                  </Link>
-                ))}
-              </div>
-            )}
+            <div className="hidden md:flex items-center gap-1">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-all duration-300"
+                >
+                  <link.icon className="h-4 w-4" />
+                  {link.label}
+                </Link>
+              ))}
+            </div>
 
             {/* Right side */}
             <div className="flex items-center gap-2">
-              {/* Search */}
-              {!isDashboard && !isProfile && (
+              {/* Search Button - Show if logged in OR on homepage */}
+              {(user || isHome) && (
                 <button
                   onClick={() => setSearchOpen(true)}
                   className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-all duration-300"
@@ -107,9 +136,9 @@ export function Navbar() {
                   </Link>
 
                   {/* Profile */}
-                  {user && username && !isProfile && !isDashboard && (
+                  {username && (
                     <Link
-                      href={`/profile/${username || ""}`}
+                      href={`/profile/${username}`}
                       className="flex items-center gap-2 px-2 py-1.5 rounded-xl hover:bg-accent/50 transition-all duration-300"
                     >
                       {user?.image ? (
@@ -207,32 +236,159 @@ export function Navbar() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-[60] bg-background/80 backdrop-blur-sm"
-            onClick={() => setSearchOpen(false)}
+            onClick={() => {
+              setSearchOpen(false);
+              setSearchQuery("");
+            }}
           >
             <div
               className="max-w-2xl mx-auto pt-24 px-4"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="glass rounded-2xl p-4">
+              <div className="glass rounded-2xl p-4 shadow-2xl border-primary/10">
                 <div className="flex items-center gap-3">
-                  <Search className="h-5 w-5 text-muted-foreground" />
+                  <Search className="h-5 w-5 text-primary" />
                   <input
                     type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Cari cerita, jalur, atau penulis..."
                     className="flex-1 bg-transparent text-foreground placeholder:text-muted-foreground outline-none text-lg"
                     autoFocus
                   />
                   <button
-                    onClick={() => setSearchOpen(false)}
-                    className="text-muted-foreground hover:text-foreground"
+                    onClick={() => {
+                      setSearchOpen(false);
+                      setSearchQuery("");
+                    }}
+                    className="p-1 rounded-lg hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
                   >
                     <X className="h-5 w-5" />
                   </button>
                 </div>
-                <div className="mt-4 pt-4 border-t border-border">
-                  <p className="text-sm text-muted-foreground">
-                    Ketik untuk mulai mencari...
-                  </p>
+
+                <div className="mt-4 pt-4 border-t border-border max-h-[60vh] overflow-y-auto custom-scrollbar">
+                  {isSearching ? (
+                    <div className="py-8 text-center text-muted-foreground">
+                      <div className="h-5 w-5 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+                      Mencari...
+                    </div>
+                  ) : searchQuery.length < 2 ? (
+                    <p className="text-sm text-muted-foreground py-4">
+                      Ketik minimal 2 karakter untuk mulai mencari...
+                    </p>
+                  ) : searchResults.stories.length === 0 &&
+                    searchResults.trails.length === 0 &&
+                    searchResults.authors.length === 0 ? (
+                    <p className="text-sm text-muted-foreground py-4">
+                      Tidak ada hasil ditemukan untuk "{searchQuery}"
+                    </p>
+                  ) : (
+                    <div className="space-y-6 py-2">
+                      {/* Stories */}
+                      {searchResults.stories.length > 0 && (
+                        <div>
+                          <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 px-2">
+                            Cerita
+                          </h4>
+                          <div className="space-y-1">
+                            {searchResults.stories.map((s) => (
+                              <Link
+                                key={s.id}
+                                href={`/story/${s.slug}`}
+                                onClick={() => setSearchOpen(false)}
+                                className="flex items-center gap-3 p-2 rounded-xl hover:bg-accent/50 transition-colors group"
+                              >
+                                <div className="h-10 w-10 rounded-lg bg-muted overflow-hidden flex-shrink-0">
+                                  {s.story_images?.[0] ? (
+                                    <img src={s.story_images[0].image_url} alt="" className="h-full w-full object-cover" />
+                                  ) : (
+                                    <div className="h-full w-full flex items-center justify-center">
+                                      <Mountain className="h-5 w-5 text-muted-foreground/40" />
+                                    </div>
+                                  )}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-medium text-foreground line-clamp-1 group-hover:text-primary transition-colors">
+                                    {s.title}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground">
+                                    oleh {s.profiles?.name}
+                                  </p>
+                                </div>
+                              </Link>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Trails */}
+                      {searchResults.trails.length > 0 && (
+                        <div>
+                          <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 px-2">
+                            Jalur
+                          </h4>
+                          <div className="space-y-1">
+                            {searchResults.trails.map((t) => (
+                              <Link
+                                key={t.id}
+                                href={`/explore?q=${t.name}`}
+                                onClick={() => setSearchOpen(false)}
+                                className="flex items-center gap-3 p-2 rounded-xl hover:bg-accent/50 transition-colors group"
+                              >
+                                <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                                  <Mountain className="h-4 w-4" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-medium text-foreground line-clamp-1">
+                                    {t.name}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {t.location}
+                                  </p>
+                                </div>
+                              </Link>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Authors */}
+                      {searchResults.authors.length > 0 && (
+                        <div>
+                          <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 px-2">
+                            Penulis
+                          </h4>
+                          <div className="space-y-1">
+                            {searchResults.authors.map((a) => (
+                              <Link
+                                key={a.id}
+                                href={`/profile/${a.username}`}
+                                onClick={() => setSearchOpen(false)}
+                                className="flex items-center gap-3 p-2 rounded-xl hover:bg-accent/50 transition-colors group"
+                              >
+                                {a.image ? (
+                                  <img src={a.image} alt="" className="h-8 w-8 rounded-full object-cover" />
+                                ) : (
+                                  <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-xs">
+                                    {a.name?.[0]}
+                                  </div>
+                                )}
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-medium text-foreground line-clamp-1">
+                                    {a.name}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground">
+                                    @{a.username}
+                                  </p>
+                                </div>
+                              </Link>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

@@ -53,6 +53,7 @@ export async function GET(req: Request) {
         slug: true,
         excerpt: true,
         likes_count: true,
+        comments_count: true,
         created_at: true,
         is_private: true,
         is_draft: true,
