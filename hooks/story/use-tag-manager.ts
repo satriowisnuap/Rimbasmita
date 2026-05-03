@@ -1,8 +1,14 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 
-export function useTagManager() {
+export function useTagManager(initialTags: string[] = []) {
   const [tagInput, setTagInput] = useState("");
-  const [tags, setTags] = useState<string[]>([]);
+  const [tags, setTags] = useState<string[]>(initialTags);
+
+  useEffect(() => {
+    if (initialTags.length > 0 && tags.length === 0) {
+      setTags(initialTags);
+    }
+  }, [initialTags]);
 
   const handleAddTag = useCallback(() => {
     const trimmed = tagInput.trim().toLowerCase();
@@ -33,6 +39,7 @@ export function useTagManager() {
     tagInput,
     setTagInput,
     tags,
+    setTags,
     handleAddTag,
     handleTagKeyDown,
     removeTag,

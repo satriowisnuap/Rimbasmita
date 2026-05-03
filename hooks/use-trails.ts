@@ -9,9 +9,10 @@ export interface Trail {
   location: string;
   elevation: number;
   image?: string | null;
+  estimated_duration?: string | null;
 }
 
-export function useTrails(limit = 6) {
+export function useTrails(limit = 100) {
   const [trails, setTrails] = useState<Trail[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -35,6 +36,7 @@ export function useTrails(limit = 6) {
           location: t.location,
           elevation: t.elevation,
           image: typeof t.image === "string" ? t.image.trim() : null,
+          estimated_duration: t.estimated_duration || null,
         }));
 
         setTrails(cleaned);

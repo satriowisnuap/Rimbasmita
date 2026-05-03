@@ -1,12 +1,16 @@
 "use client";
 
+import { useEffect } from "react";
 import { Mountain, ArrowUp, Clock, Loader as Loader2 } from "lucide-react";
 import { difficultyOptions } from "@/constans/options-story";
+import { TrailSelect } from "./trail-select";
 
 interface Trail {
   id: string;
   name: string;
   location?: string;
+  elevation?: number;
+  estimated_duration?: string | null;
 }
 
 interface Props {
@@ -34,6 +38,21 @@ export function TrailDifficultySection({
   elevation,
   setElevation,
 }: Props) {
+  // Auto-fill duration and elevation when trail is selected
+  useEffect(() => {
+    if (selectedTrail && trails.length > 0) {
+      const trail = trails.find((t) => t.id === selectedTrail);
+      if (trail) {
+        if (trail.estimated_duration && !duration) {
+          setDuration(trail.estimated_duration);
+        }
+        if (trail.elevation && !elevation) {
+          setElevation(`${trail.elevation.toLocaleString()} mdpl`);
+        }
+      }
+    }
+  }, [selectedTrail, trails, duration, elevation, setDuration, setElevation]);
+
   return (
     <section className="glass rounded-2xl p-6">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -44,24 +63,16 @@ export function TrailDifficultySection({
             Trail
           </label>
           {loadingTrails ? (
-            <div className="flex items-center gap-2 text-muted-foreground text-sm py-2">
+            <div className="flex items-center gap-2 text-muted-foreground text-sm py-2 px-4 bg-card/50 border border-border rounded-xl">
               <Loader2 className="h-4 w-4 animate-spin" />
               Loading trails...
             </div>
           ) : (
-            <select
-              value={selectedTrail}
-              onChange={(e) => setSelectedTrail(e.target.value)}
-              className="w-full bg-card/50 border border-border rounded-xl px-4 py-2.5 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary/30 transition-all appearance-none cursor-pointer"
-            >
-              <option value="">Select a trail (optional)</option>
-              {trails.map((trail) => (
-                <option key={trail.id} value={trail.id}>
-                  {trail.name}
-                  {trail.location ? ` - ${trail.location}` : ""}
-                </option>
-              ))}
-            </select>
+            <TrailSelect 
+              trails={trails} 
+              value={selectedTrail} 
+              onValueChange={setSelectedTrail} 
+            />
           )}
         </div>
 
@@ -104,7 +115,7 @@ export function TrailDifficultySection({
             value={duration}
             onChange={(e) => setDuration(e.target.value)}
             placeholder="e.g. 3 days, 8 hours"
-            className="w-full bg-card/50 border border-border rounded-xl px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/60 outline-none focus:ring-2 focus:ring-primary/30 transition-all"
+            className="w-full bg-card/50 border border-border rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/60 outline-none focus:ring-2 focus:ring-primary/30 transition-all"
           />
         </div>
         <div>
@@ -120,7 +131,7 @@ export function TrailDifficultySection({
             value={elevation}
             onChange={(e) => setElevation(e.target.value)}
             placeholder="e.g. 3,726 mdpl"
-            className="w-full bg-card/50 border border-border rounded-xl px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/60 outline-none focus:ring-2 focus:ring-primary/30 transition-all"
+            className="w-full bg-card/50 border border-border rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/60 outline-none focus:ring-2 focus:ring-primary/30 transition-all"
           />
         </div>
       </div>

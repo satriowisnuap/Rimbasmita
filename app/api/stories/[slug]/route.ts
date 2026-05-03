@@ -75,3 +75,92 @@ export async function GET(
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
+
+export async function PATCH(
+  req: Request,
+  { params }: { params: { slug: string } }
+) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session || !(session.user as any)?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const userId = (session.user as any).id;
+    const { slug } = params;
+    const body = await req.json();
+
+    const {
+      title,
+      content,
+      selectedTrail,
+      difficulty,
+      duration,
+      elevation,
+      mood,
+      tips,
+      warnings,
+      isPrivate,
+      isDraft,
+      tags,
+      imageUrls,
+    } = body;
+
+    // Find the story and check ownership
+    const existingStory = await prisma.story.findUnique({
+      where: { slug },
+      select: { id: true, user_id: true }
+    });
+
+    if (!existingStory) {
+      return NextResponse.json({ error: "Story not found" }, { status: 404 });
+    }
+
+    if (existingStory.user_id !== userId) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    // Update story
+    const updatedStory = await prisma.story.update({
+      where: { id: existingStory.id },
+      data: {
+        title: title?.trim(),
+        content: content?.trim(),
+        excerpt: content?.trim()?.substring(0, 200),
+        trail_id: selectedTrail || null,
+        difficulty: difficulty || null,
+        duration: duration?.trim() || null,
+        elevation: elevation?.trim() || null,
+        mood: mood || null,
+        tips: tips?.trim() || null,
+        warnings: warnings?.trim() || null,
+        is_private: isPrivate,
+        is_draft: isDraft,
+        updated_at: new Date(),
+        // Update tags: delete old ones and insert new ones
+        story_tags: {
+          deleteMany: {},
+          create: tags?.map((tag: string) => ({
+            tag,
+          })) || [],
+        },
+        // Update images: delete old ones and insert new ones
+        story_images: {
+          deleteMany: {},
+          create: imageUrls?.map((url: string, index: number) => ({
+            image_url: url,
+            display_order: index,
+          })) || [],
+        },
+      },
+    });
+
+    return NextResponse.json({ success: true, story: updatedStory });
+  } catch (error: any) {
+    console.error("Error updating story:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}

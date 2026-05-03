@@ -1,10 +1,16 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 
-export function useImageManager() {
-  const [imageUrls, setImageUrls] = useState<string[]>([]);
+export function useImageManager(initialImageUrls: string[] = []) {
+  const [imageUrls, setImageUrls] = useState<string[]>(initialImageUrls);
   const [imageUrlInput, setImageUrlInput] = useState("");
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (initialImageUrls.length > 0 && imageUrls.length === 0) {
+      setImageUrls(initialImageUrls);
+    }
+  }, [initialImageUrls]);
 
   const handleAddImageUrl = useCallback(() => {
     const trimmed = imageUrlInput.trim();
@@ -57,6 +63,7 @@ export function useImageManager() {
 
   return {
     imageUrls,
+    setImageUrls,
     imageUrlInput,
     setImageUrlInput,
     isDragging,
