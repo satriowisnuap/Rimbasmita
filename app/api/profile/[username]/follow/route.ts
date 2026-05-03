@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { createNotification } from "@/lib/notifications";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -80,7 +79,9 @@ export async function POST(
         },
       });
 
-      // Create notification
+      // ✅ FIX: lazy import notification
+      const { createNotification } = await import("@/lib/notifications");
+
       await createNotification({
         userId: profile.id,
         actorId: userId,
