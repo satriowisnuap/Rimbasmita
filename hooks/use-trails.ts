@@ -8,6 +8,7 @@ export interface Trail {
   name: string;
   location: string;
   elevation: number;
+  difficulty?: string | null;
   image?: string | null;
   estimated_duration?: string | null;
 }
@@ -35,6 +36,7 @@ export function useTrails(limit = 100) {
           name: t.name,
           location: t.location,
           elevation: t.elevation,
+          difficulty: t.difficulty || null,
           image: typeof t.image === "string" ? t.image.trim() : null,
           estimated_duration: t.estimated_duration || null,
         }));
