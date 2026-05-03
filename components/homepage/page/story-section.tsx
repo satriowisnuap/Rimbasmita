@@ -303,7 +303,7 @@ export default function StorySection({ fadeInUp, stagger }: any) {
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.97 }}
-              onClick={() => router.push("/journal")}
+              onClick={() => router.push("/stories")}
               className="inline-flex items-center gap-2 px-6 py-3 rounded-full glass text-sm font-semibold text-foreground hover:text-primary hover:shadow-lg hover:shadow-primary/10 transition-all duration-300 border border-border/40"
             >
               Lihat semua cerita

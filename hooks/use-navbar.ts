@@ -5,7 +5,7 @@ import { useSession, signOut } from "next-auth/react";
 import { useState } from "react";
 import { useTheme } from "next-themes";
 import { useRouter, usePathname } from "next/navigation";
-import { BookOpen, Compass, PenLine } from "lucide-react";
+import { BookOpen, Compass, PenLine, Scroll } from "lucide-react";
 
 export function useNavbar() {
   const { data: session } = useSession();
@@ -26,10 +26,16 @@ export function useNavbar() {
     ? [
         { href: "/dashboard", label: "Feed", icon: BookOpen },
         { href: "/explore", label: "Explore", icon: Compass },
+        { href: "/stories", label: "Stories", icon: Scroll },
         { href: "/create", label: "Write", icon: PenLine },
         { href: "/journal", label: "Journal", icon: BookOpen },
       ]
-    : [{ href: "/explore", label: "Explore", icon: Compass }];
+    : [
+        { href: "/explore", label: "Explore", icon: Compass },
+        ...(isHome
+          ? [{ href: "/stories", label: "Cerita", icon: Scroll }]
+          : []),
+      ];
 
   const toggleTheme = () => setTheme(theme === "dark" ? "light" : "dark");
 
