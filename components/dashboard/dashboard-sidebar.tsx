@@ -20,6 +20,12 @@ interface Props {
   userName?: string;
   userImage?: string;
   username?: string;
+  stats?: {
+    totalStories: number;
+    totalLikes: number;
+    trailsExplored: number;
+    streakDays: number;
+  };
 }
 
 export function DashboardSidebar(props: Props) {
@@ -31,6 +37,13 @@ export function DashboardSidebar(props: Props) {
   const username = props.username ?? user?.username;
   const userName = props.userName ?? user?.name ?? "Pendaki";
   const userImage = props.userImage ?? user?.image;
+  
+  const stats = props.stats || {
+    totalStories: 0,
+    totalLikes: 0,
+    trailsExplored: 0,
+    streakDays: 0,
+  };
 
   return (
     <aside className="w-full lg:w-72 flex-shrink-0 order-2 lg:order-1">
@@ -107,28 +120,28 @@ export function DashboardSidebar(props: Props) {
                 <FileText className="h-3.5 w-3.5" />
                 Cerita ditulis
               </span>
-              <span className="text-sm font-semibold text-foreground">0</span>
+              <span className="text-sm font-semibold text-foreground">{stats.totalStories}</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground flex items-center gap-2">
                 <Heart className="h-3.5 w-3.5" />
                 Total suka
               </span>
-              <span className="text-sm font-semibold text-foreground">0</span>
+              <span className="text-sm font-semibold text-foreground">{stats.totalLikes}</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground flex items-center gap-2">
                 <Mountain className="h-3.5 w-3.5" />
                 Jalur dijelajahi
               </span>
-              <span className="text-sm font-semibold text-foreground">0</span>
+              <span className="text-sm font-semibold text-foreground">{stats.trailsExplored}</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground flex items-center gap-2">
                 <TrendingUp className="h-3.5 w-3.5" />
                 Hari berturut
               </span>
-              <span className="text-sm font-semibold text-foreground">0</span>
+              <span className="text-sm font-semibold text-foreground">{stats.streakDays}</span>
             </div>
           </div>
         </motion.div>

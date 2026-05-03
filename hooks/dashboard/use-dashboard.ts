@@ -21,6 +21,7 @@ export function useDashboard() {
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
   const [stories, setStories] = useState<any[]>([]);
+  const [stats, setStats] = useState({ totalStories: 0, totalLikes: 0, trailsExplored: 0, streakDays: 0 });
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<SortTab>("terbaru");
 
@@ -38,7 +39,7 @@ export function useDashboard() {
     }
   }, [session, status]);
 
-  // ✅ FETCH PROFILE + STORIES
+  // ✅ FETCH PROFILE, STORIES, STATS
   useEffect(() => {
     if (!DEV_BYPASS_AUTH && !user) return;
 
@@ -46,59 +47,14 @@ export function useDashboard() {
       setLoading(true);
 
       try {
-        const userEmail = user?.email;
-
-        // 🔥 PROFILE (pakai maybeSingle biar tidak error)
-        let { data: profileData } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("email", userEmail)
-          .maybeSingle();
-
-        // 🔥 AUTO CREATE PROFILE kalau belum ada
-        if (!profileData) {
-          const { data: newProfile, error: insertError } = await supabase
-            .from("profiles")
-            .insert({
-              email: userEmail,
-              username: userEmail?.split("@")[0],
-              name: user?.name,
-              image: user?.image,
-            })
-            .select()
-            .maybeSingle();
-
-          if (insertError) {
-            console.error("Insert profile error:", insertError);
-          } else {
-            profileData = newProfile;
-          }
-        }
-
-        setProfile(profileData);
-
-        // 🔥 STORIES
-        const { data: storiesData, error: storiesError } = await supabase
-          .from("stories")
-          .select(
-            `
-            id, title, slug, excerpt, likes_count, created_at,
-            profiles:user_id (name, username),
-            trails:trail_id (name),
-            story_images (image_url)
-          `,
-          )
-          .eq("is_private", false)
-          .eq("is_draft", false)
-          .order(activeTab === "terbaru" ? "created_at" : "likes_count", {
-            ascending: false,
-          })
-          .limit(20);
-
-        if (storiesError) {
-          console.error("Stories error:", storiesError);
+        const res = await fetch(`/api/dashboard?tab=${activeTab}`);
+        if (res.ok) {
+          const data = await res.json();
+          setProfile(data.profile);
+          setStories(data.stories || []);
+          setStats(data.stats || { totalStories: 0, totalLikes: 0, trailsExplored: 0, streakDays: 0 });
         } else {
-          setStories(storiesData || []);
+          console.error("Failed to fetch dashboard data");
         }
       } catch (err) {
         console.error("Dashboard error:", err);
@@ -119,6 +75,7 @@ export function useDashboard() {
   return {
     user,
     stories,
+    stats,
     loading,
     activeTab,
     setActiveTab,

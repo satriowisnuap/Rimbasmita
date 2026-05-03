@@ -12,6 +12,7 @@ export default function DashboardPage() {
   const {
     user,
     stories,
+    stats,
     loading,
     activeTab,
     setActiveTab,
@@ -76,6 +77,7 @@ export default function DashboardPage() {
               userName={userName}
               userImage={userImage}
               username={username}
+              stats={stats}
             />
             <DashboardFeed
               stories={stories}
