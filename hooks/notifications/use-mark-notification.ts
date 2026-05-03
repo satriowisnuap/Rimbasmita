@@ -16,33 +16,36 @@ export function useMarkNotification({
   const markAsRead = async (notificationId: string) => {
     setMarkingRead(notificationId);
 
-    const { error } = await supabase
-      .from("notifications")
-      .update({ is_read: true })
-      .eq("id", notificationId);
+    try {
+      const res = await fetch(`/api/notifications/${notificationId}/read`, {
+        method: "PATCH",
+      });
 
-    if (!error) {
-      setNotifications((prev) =>
-        prev.map((n) =>
-          n.id === notificationId ? { ...n, is_read: true } : n,
-        ),
-      );
+      if (res.ok) {
+        setNotifications((prev) =>
+          prev.map((n) =>
+            n.id === notificationId ? { ...n, is_read: true } : n,
+          ),
+        );
+      }
+    } catch (error) {
+      console.error("Error marking notification as read:", error);
+    } finally {
+      setMarkingRead(null);
     }
-
-    setMarkingRead(null);
   };
 
   const markAllAsRead = async () => {
-    const unreadIds = notifications.filter((n) => !n.is_read).map((n) => n.id);
-    if (unreadIds.length === 0) return;
+    const hasUnread = notifications.some((n) => !n.is_read);
+    if (!hasUnread) return;
 
-    const { error } = await supabase
-      .from("notifications")
-      .update({ is_read: true })
-      .in("id", unreadIds);
-
-    if (!error) {
-      setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
+    try {
+      const res = await fetch("/api/notifications", { method: "PATCH" });
+      if (res.ok) {
+        setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
+      }
+    } catch (error) {
+      console.error("Error marking all as read:", error);
     }
   };
 

@@ -13,25 +13,37 @@ export function useNotifications() {
   const fetchNotifications = useCallback(async () => {
     if (!userId) return;
 
-    setLoading(true);
-
-    const { data, error } = await supabase
-      .from("notifications")
-      .select(
-        "*, actor:profiles!notifications_actor_id_fkey(name, username, image), stories(title, slug)",
-      )
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false })
-      .limit(50);
-
-    if (error) {
+    try {
+      setLoading(true);
+      const res = await fetch("/api/notifications");
+      if (!res.ok) throw new Error("Failed to fetch notifications");
+      const data = await res.json();
+      
+      // Parse data to match Notification interface
+      const parsed = data.map((n: any) => ({
+        ...n,
+        actor: n.profiles_notifications_actor_idToprofiles,
+      }));
+      
+      setNotifications(parsed);
+    } catch (error) {
       console.error("Error fetching notifications:", error);
-    } else {
-      setNotifications(data || []);
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   }, [userId]);
+
+  const deleteAll = async () => {
+    if (!userId) return;
+    try {
+      const res = await fetch("/api/notifications", { method: "DELETE" });
+      if (res.ok) {
+        setNotifications([]);
+      }
+    } catch (error) {
+      console.error("Error deleting all notifications:", error);
+    }
+  };
 
   useEffect(() => {
     if (status === "authenticated" && userId) {
@@ -39,5 +51,5 @@ export function useNotifications() {
     }
   }, [status, userId, fetchNotifications]);
 
-  return { notifications, setNotifications, loading };
+  return { notifications, setNotifications, loading, fetchNotifications, deleteAll };
 }

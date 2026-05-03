@@ -1,4 +1,4 @@
-import { Heart, MessageCircle, UserPlus, Award } from "lucide-react";
+import { Heart, MessageCircle, UserPlus, Award, Bookmark } from "lucide-react";
 
 export interface Actor {
   name: string;
@@ -15,8 +15,9 @@ export interface Notification {
   id: string;
   user_id: string;
   actor_id: string;
-  type: "like" | "comment" | "follow" | "achievement";
+  type: "like" | "comment" | "follow" | "achievement" | "bookmark";
   is_read: boolean;
+  message?: string;
   created_at: string;
   actor: Actor;
   stories: StoryInfo | null;
@@ -66,6 +67,12 @@ export const typeConfig: Record<
     label: "Kamu mendapatkan badge baru!",
     color: "text-amber-500",
     bgColor: "bg-amber-500/10",
+  },
+  bookmark: {
+    icon: Bookmark,
+    label: "menyimpan ceritamu",
+    color: "text-violet-500",
+    bgColor: "bg-violet-500/10",
   },
 };
 

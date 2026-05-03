@@ -24,7 +24,6 @@ export async function GET() {
         },
       },
       orderBy: { created_at: "desc" },
-      take: 50,
     });
 
     return NextResponse.json(notifications);
@@ -55,6 +54,30 @@ export async function PATCH() {
     return NextResponse.json({ message: "All notifications marked as read" });
   } catch (error) {
     console.error("Error updating notifications:", error);
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE() {
+  try {
+    const session = await getServerSession(authOptions);
+
+    if (!session || !(session.user as any)?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const userId = (session.user as any).id;
+
+    await prisma.notifications.deleteMany({
+      where: { user_id: userId },
+    });
+
+    return NextResponse.json({ message: "All notifications deleted" });
+  } catch (error) {
+    console.error("Error deleting notifications:", error);
     return NextResponse.json(
       { error: "Internal Server Error" },
       { status: 500 }

@@ -8,7 +8,7 @@ import { NotificationsHeader } from "@/components/notifications/notification-hea
 import { NotificationsBody } from "@/components/notifications/notification-body";
 
 export function NotificationsPage() {
-  const { notifications, setNotifications, loading } = useNotifications();
+  const { notifications, setNotifications, loading, deleteAll } = useNotifications();
   const { markingRead, markAsRead, markAllAsRead } = useMarkNotification({
     notifications,
     setNotifications,
@@ -25,6 +25,8 @@ export function NotificationsPage() {
           <NotificationsHeader
             unreadCount={unreadCount}
             onMarkAllRead={markAllAsRead}
+            onDeleteAll={deleteAll}
+            hasNotifications={notifications.length > 0}
           />
 
           <NotificationsBody
