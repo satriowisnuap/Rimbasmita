@@ -27,7 +27,7 @@ export async function POST(
     // Find the story by slug
     const story = await prisma.story.findUnique({
       where: { slug },
-      select: { id: true }
+      select: { id: true, user_id: true }
     });
 
     if (!story) {
@@ -53,6 +53,16 @@ export async function POST(
         data: { comments_count: { increment: 1 } }
       })
     ]);
+
+    // Create notification
+    const { createNotification } = await import("@/lib/notifications");
+    await createNotification({
+      userId: story.user_id,
+      actorId: userId,
+      type: "comment",
+      storyId: story.id,
+      message: `mengomentari: "${content.trim().substring(0, 50)}${content.trim().length > 50 ? "..." : ""}"`
+    });
 
     return NextResponse.json({ comment }, { status: 201 });
   } catch (error) {

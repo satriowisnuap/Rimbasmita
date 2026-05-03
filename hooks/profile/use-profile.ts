@@ -166,28 +166,15 @@ export function useProfile(): UseProfileReturn {
     setFollowLoading(true);
 
     try {
-      if (isFollowing) {
-        const { error } = await supabase
-          .from("follows")
-          .delete()
-          .eq("follower_id", (session.user as any).id)
-          .eq("following_id", profile.id);
+      const res = await fetch(`/api/profile/${username}/follow`, {
+        method: "POST",
+      });
 
-        if (!error) {
-          setIsFollowing(false);
-          setFollowersCount((prev) => prev - 1);
-        }
-      } else {
-        const { error } = await supabase.from("follows").insert({
-          follower_id: (session.user as any).id,
-          following_id: profile.id,
-        });
+      if (!res.ok) throw new Error("Failed to toggle follow");
 
-        if (!error) {
-          setIsFollowing(true);
-          setFollowersCount((prev) => prev + 1);
-        }
-      }
+      const data = await res.json();
+      setIsFollowing(data.following);
+      setFollowersCount((prev) => (data.following ? prev + 1 : prev - 1));
     } catch (err) {
       console.error("Follow toggle error:", err);
     } finally {
