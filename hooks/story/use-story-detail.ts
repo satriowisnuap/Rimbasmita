@@ -137,55 +137,23 @@ export function useStoryDetail(): UseStoryDetailReturn {
 
   const fetchStory = useCallback(async () => {
     try {
-      const { data, error } = await supabase
-        .from("stories")
-        .select(
-          "*, profiles:user_id(*), trails:trail_id(*), story_images(*), story_tags(*)",
-        )
-        .eq("slug", slug)
-        .single();
-
-      if (error || !data) {
+      setLoading(true);
+      const res = await fetch(`/api/stories/${slug}`);
+      if (!res.ok) {
         setLoading(false);
         return;
       }
-
-      setStory(data);
-      setLikesCount(data.likes_count || 0);
-      setBookmarksCount(data.bookmarks_count || 0);
-
-      // Fetch comments
-      const { data: commentsData } = await supabase
-        .from("comments")
-        .select("*, profiles:user_id(name, username, image)")
-        .eq("story_id", data.id)
-        .order("created_at");
-
-      if (commentsData) {
-        setComments(commentsData);
-      }
-
-      // Check like and bookmark status if user is logged in
+      
+      const data = await res.json();
+      
+      setStory(data.story);
+      setComments(data.comments || []);
+      setLikesCount(data.story.likes_count || 0);
+      setBookmarksCount(data.story.bookmarks_count || 0);
+      
       if (session?.user) {
-        const userId = (session.user as any).id;
-
-        const { data: likeData } = await supabase
-          .from("likes")
-          .select("id")
-          .eq("story_id", data.id)
-          .eq("user_id", userId)
-          .maybeSingle();
-
-        setIsLiked(!!likeData);
-
-        const { data: bookmarkData } = await supabase
-          .from("bookmarks")
-          .select("id")
-          .eq("story_id", data.id)
-          .eq("user_id", userId)
-          .maybeSingle();
-
-        setIsBookmarked(!!bookmarkData);
+        setIsLiked(data.isLiked);
+        setIsBookmarked(data.isBookmarked);
       }
     } catch {
       // Silently handle fetch errors
