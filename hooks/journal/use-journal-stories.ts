@@ -6,7 +6,7 @@ export function useJournalStories() {
   const { data: session, status } = useSession();
   const userId = (session?.user as any)?.id;
 
-  const [privateStories, setPrivateStories] = useState<JournalStory[]>([]);
+  const [publishedStories, setPublishedStories] = useState<JournalStory[]>([]);
   const [drafts, setDrafts] = useState<JournalStory[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -21,7 +21,7 @@ export function useJournalStories() {
       }
 
       const data = await res.json();
-      setPrivateStories(data.privateStories || []);
+      setPublishedStories(data.publishedStories || []);
       setDrafts(data.drafts || []);
     } catch (error) {
       console.error("Error fetching journal stories:", error);
@@ -41,9 +41,9 @@ export function useJournalStories() {
   }, [status, userId, fetchJournalStories]);
 
   const removeStory = (storyId: string) => {
-    setPrivateStories((prev) => prev.filter((s) => s.id !== storyId));
+    setPublishedStories((prev) => prev.filter((s) => s.id !== storyId));
     setDrafts((prev) => prev.filter((s) => s.id !== storyId));
   };
 
-  return { privateStories, drafts, loading, removeStory };
+  return { publishedStories, drafts, loading, removeStory };
 }

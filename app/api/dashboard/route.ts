@@ -22,19 +22,31 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: "Profile not found" }, { status: 404 });
     }
 
-    // Fetch user stories for the feed (only their own stories)
+    // Fetch stories from ALL writers for the feed
     const url = new URL(req.url);
     const tab = url.searchParams.get("tab") || "terbaru";
     
     let orderBy: any = { created_at: "desc" };
-    if (tab === "populer" || tab === "trending") {
+    let whereClause: any = {
+      is_private: false,
+      is_draft: false,
+    };
+
+    if (tab === "populer") {
       orderBy = { likes_count: "desc" };
+    } else if (tab === "trending") {
+      // For trending, we'll sort by a combination of likes, comments, and bookmarks
+      // Since Prisma doesn't support complex sorting like (likes + comments), we'll sort by likes_count desc as a fallback
+      // but in a real app you might use a calculated "trending_score"
+      orderBy = [
+        { likes_count: "desc" },
+        { comments_count: "desc" },
+        { bookmarks_count: "desc" }
+      ];
     }
 
     const stories = await prisma.story.findMany({
-      where: {
-        user_id: userId,
-      },
+      where: whereClause,
       select: {
         id: true,
         title: true,

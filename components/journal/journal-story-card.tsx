@@ -72,7 +72,7 @@ export function JournalStoryCard({ story, deletingId, onDeleteClick }: Props) {
           <Link
             href={
               story.is_draft
-                ? `/create?edit=${story.id}`
+                ? `/story/edit/${story.slug}`
                 : `/story/${story.slug}`
             }
             className="inline-flex items-center gap-1.5 text-sm text-primary hover:text-primary/80 font-medium transition-colors"
@@ -92,7 +92,7 @@ export function JournalStoryCard({ story, deletingId, onDeleteClick }: Props) {
 
           <div className="flex items-center gap-1">
             <Link
-              href={`/create?edit=${story.id}`}
+              href={`/story/edit/${story.slug}`}
               className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-all duration-300"
               title="Edit"
             >

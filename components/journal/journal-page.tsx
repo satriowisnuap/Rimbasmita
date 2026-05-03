@@ -11,16 +11,16 @@ import { JournalStoryList } from "@/components/journal/journal-story-list";
 import { DeleteConfirmModal } from "@/components/journal/delete-confirm-modal";
 
 export function JournalPage() {
-  const [activeTab, setActiveTab] = useState<TabKey>("private");
+  const [activeTab, setActiveTab] = useState<TabKey>("terbit");
 
-  const { privateStories, drafts, loading, removeStory } = useJournalStories();
+  const { publishedStories, drafts, loading, removeStory } = useJournalStories();
 
   const { deletingId, confirmDeleteId, setConfirmDeleteId, handleDelete } =
     useDeleteStory({
       onDeleted: removeStory,
     });
 
-  const currentStories = activeTab === "private" ? privateStories : drafts;
+  const currentStories = activeTab === "terbit" ? publishedStories : drafts;
 
   return (
     <div className="min-h-screen bg-background">
@@ -29,7 +29,7 @@ export function JournalPage() {
       <JournalHeroSection
         activeTab={activeTab}
         setActiveTab={setActiveTab}
-        privateCount={privateStories.length}
+        publishedCount={publishedStories.length}
         draftCount={drafts.length}
       />
 

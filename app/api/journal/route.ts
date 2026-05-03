@@ -13,11 +13,10 @@ export async function GET(req: Request) {
 
     const userId = (session.user as any).id;
 
-    // Fetch private stories
-    const privateStories = await prisma.story.findMany({
+    // Fetch all published stories (both private and public)
+    const publishedStories = await prisma.story.findMany({
       where: {
         user_id: userId,
-        is_private: true,
         is_draft: false,
       },
       select: {
@@ -53,7 +52,7 @@ export async function GET(req: Request) {
     });
 
     return NextResponse.json({
-      privateStories,
+      publishedStories,
       drafts,
     });
   } catch (error) {

@@ -7,18 +7,18 @@ import { TabKey, tabOptions } from "@/constans/journal-config";
 interface Props {
   activeTab: TabKey;
   setActiveTab: (tab: TabKey) => void;
-  privateCount: number;
+  publishedCount: number;
   draftCount: number;
 }
 
 export function JournalHeroSection({
   activeTab,
   setActiveTab,
-  privateCount,
+  publishedCount,
   draftCount,
 }: Props) {
   const counts: Record<TabKey, number> = {
-    private: privateCount,
+    terbit: publishedCount,
     draft: draftCount,
   };
 

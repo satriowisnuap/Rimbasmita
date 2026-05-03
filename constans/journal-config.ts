@@ -1,6 +1,6 @@
-import { Lock, FileText } from "lucide-react";
+import { Globe, FileText } from "lucide-react";
 
-export type TabKey = "private" | "draft";
+export type TabKey = "terbit" | "draft";
 
 export interface JournalStory {
   id: string;
@@ -37,7 +37,7 @@ export const tabOptions: {
   label: string;
   icon: React.ElementType;
 }[] = [
-  { key: "private", label: "Jurnal Pribadi", icon: Lock },
+  { key: "terbit", label: "Cerita Terbit", icon: Globe },
   { key: "draft", label: "Draf", icon: FileText },
 ];
 
