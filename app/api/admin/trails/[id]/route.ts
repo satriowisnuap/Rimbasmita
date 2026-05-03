@@ -21,6 +21,33 @@ async function requireAdmin() {
   return { error: null, status: 200 };
 }
 
+// GET — fetch single trail (required by Next.js 13 build for dynamic routes)
+export async function GET(
+  _req: Request,
+  { params }: { params: { id: string } },
+) {
+  const { error, status } = await requireAdmin();
+  if (error) return NextResponse.json({ error }, { status });
+
+  try {
+    const trail = await prisma.trail.findUnique({
+      where: { id: params.id },
+    });
+
+    if (!trail) {
+      return NextResponse.json({ error: "Trail not found" }, { status: 404 });
+    }
+
+    return NextResponse.json({ trail });
+  } catch (err) {
+    console.error("Error fetching trail:", err);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
+  }
+}
+
 // PATCH — update trail
 export async function PATCH(
   req: Request,

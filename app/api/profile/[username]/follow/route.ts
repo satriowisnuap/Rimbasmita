@@ -7,6 +7,11 @@ import { createNotification } from "@/lib/notifications";
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
+// GET stub — required by Next.js 13 build for dynamic routes
+export async function GET() {
+  return NextResponse.json({ error: "Method not allowed" }, { status: 405 });
+}
+
 export async function POST(
   req: Request,
   { params }: { params: { username: string } },
