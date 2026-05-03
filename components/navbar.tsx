@@ -53,7 +53,9 @@ export function Navbar() {
       if (searchQuery.length >= 2) {
         setIsSearching(true);
         try {
-          const res = await fetch(`/api/search?q=${encodeURIComponent(searchQuery)}`);
+          const res = await fetch(
+            `/api/search?q=${encodeURIComponent(searchQuery)}`,
+          );
           const data = await res.json();
           setSearchResults(data);
         } catch (error) {
@@ -75,10 +77,7 @@ export function Navbar() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
-            <Link
-              href="/"
-              className="flex items-center gap-2 group"
-            >
+            <Link href="/" className="flex items-center gap-2 group">
               <Mountain className="h-7 w-7 text-primary transition-transform group-hover:scale-110" />
               <span className="text-lg font-bold tracking-tight text-foreground">
                 Rimbasmita
@@ -289,7 +288,7 @@ export function Navbar() {
                       {searchResults.stories.length > 0 && (
                         <div>
                           <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 px-2">
-                            Cerita
+                            Stories
                           </h4>
                           <div className="space-y-1">
                             {searchResults.stories.map((s) => (
@@ -301,7 +300,11 @@ export function Navbar() {
                               >
                                 <div className="h-10 w-10 rounded-lg bg-muted overflow-hidden flex-shrink-0">
                                   {s.story_images?.[0] ? (
-                                    <img src={s.story_images[0].image_url} alt="" className="h-full w-full object-cover" />
+                                    <img
+                                      src={s.story_images[0].image_url}
+                                      alt=""
+                                      className="h-full w-full object-cover"
+                                    />
                                   ) : (
                                     <div className="h-full w-full flex items-center justify-center">
                                       <Mountain className="h-5 w-5 text-muted-foreground/40" />
@@ -368,7 +371,11 @@ export function Navbar() {
                                 className="flex items-center gap-3 p-2 rounded-xl hover:bg-accent/50 transition-colors group"
                               >
                                 {a.image ? (
-                                  <img src={a.image} alt="" className="h-8 w-8 rounded-full object-cover" />
+                                  <img
+                                    src={a.image}
+                                    alt=""
+                                    className="h-8 w-8 rounded-full object-cover"
+                                  />
                                 ) : (
                                   <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-xs">
                                     {a.name?.[0]}
