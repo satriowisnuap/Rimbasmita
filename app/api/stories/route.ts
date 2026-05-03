@@ -4,6 +4,65 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { generateSlug } from "@/lib/utils";
 
+export async function GET() {
+  try {
+    const stories = await prisma.story.findMany({
+      where: {
+        is_draft: false,
+        is_private: false,
+      },
+      orderBy: { created_at: "desc" },
+      take: 20,
+      select: {
+        id: true,
+        slug: true,
+        title: true,
+        excerpt: true,
+        difficulty: true,
+        duration: true,
+        mood: true,
+        likes_count: true,
+        comments_count: true,
+        created_at: true,
+        profiles: {
+          select: {
+            name: true,
+            username: true,
+            image: true,
+          },
+        },
+        trails: {
+          select: {
+            name: true,
+            location: true,
+          },
+        },
+        story_images: {
+          orderBy: { display_order: "asc" },
+          take: 1,
+          select: {
+            image_url: true,
+          },
+        },
+        story_tags: {
+          take: 3,
+          select: {
+            tag: true,
+          },
+        },
+      },
+    });
+
+    return NextResponse.json({ stories });
+  } catch (error) {
+    console.error("Error fetching stories:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
+  }
+}
+
 export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);

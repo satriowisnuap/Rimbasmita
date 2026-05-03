@@ -24,6 +24,7 @@ export function useDashboard() {
   const [stats, setStats] = useState({ totalStories: 0, totalLikes: 0, trailsExplored: 0, streakDays: 0 });
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<SortTab>("terbaru");
+  const [role, setRole] = useState<string | null>(null);
 
   // ✅ AUTH
   useEffect(() => {
@@ -51,6 +52,7 @@ export function useDashboard() {
         if (res.ok) {
           const data = await res.json();
           setProfile(data.profile);
+          setRole(data.profile?.role ?? null);
           setStories(data.stories || []);
           setStats(data.stats || { totalStories: 0, totalLikes: 0, trailsExplored: 0, streakDays: 0 });
         } else {
@@ -82,6 +84,7 @@ export function useDashboard() {
     userName,
     userImage,
     username,
+    role,
     isDevMode: DEV_BYPASS_AUTH,
   };
 }
