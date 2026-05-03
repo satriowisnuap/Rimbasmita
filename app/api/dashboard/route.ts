@@ -48,6 +48,7 @@ export async function GET(req: Request) {
           select: {
             name: true,
             username: true,
+            image: true,
           }
         },
         trails: {

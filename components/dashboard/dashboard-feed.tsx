@@ -18,19 +18,15 @@ interface Story {
   likes_count: number;
   comments_count: number;
   created_at: string;
-  profiles:
-    | {
-        name: string;
-        username: string;
-        image: string | null;
-      }[]
-    | null;
-  trails:
-    | {
-        name: string;
-        location: string;
-      }[]
-    | null;
+  profiles: {
+    name: string;
+    username: string;
+    image: string | null;
+  } | null;
+  trails: {
+    name: string;
+    location: string;
+  } | null;
   story_images: {
     image_url: string;
     display_order: number;
@@ -161,15 +157,15 @@ export function DashboardFeed({
                     excerpt={story.excerpt || ""}
                     coverImage={coverImage}
                     author={{
-                      name: story.profiles?.[0]?.name || "Anonim",
-                      username: story.profiles?.[0]?.username || "",
-                      image: story.profiles?.[0]?.image || undefined,
+                      name: story.profiles?.name || "Anonim",
+                      username: story.profiles?.username || "",
+                      image: story.profiles?.image || undefined,
                     }}
                     trail={
-                      story.trails?.[0]
+                      story.trails
                         ? {
-                            name: story.trails[0].name,
-                            location: story.trails[0].location,
+                            name: story.trails.name,
+                            location: story.trails.location,
                           }
                         : undefined
                     }

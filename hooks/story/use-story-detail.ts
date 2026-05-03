@@ -168,97 +168,75 @@ export function useStoryDetail(): UseStoryDetailReturn {
 
   const handleLikeToggle = async () => {
     if (!session?.user || !story) return;
-    const userId = (session.user as any).id;
+    
+    // Optimistic UI update
+    const previousIsLiked = isLiked;
+    const previousLikesCount = likesCount;
+    
+    setIsLiked(!isLiked);
+    setLikesCount(isLiked ? Math.max(0, likesCount - 1) : likesCount + 1);
 
     try {
-      if (isLiked) {
-        await supabase
-          .from("likes")
-          .delete()
-          .eq("story_id", story.id)
-          .eq("user_id", userId);
-        setLikesCount((c) => Math.max(0, c - 1));
-      } else {
-        await supabase
-          .from("likes")
-          .insert({ story_id: story.id, user_id: userId });
-        setLikesCount((c) => c + 1);
+      const res = await fetch(`/api/stories/${slug}/like`, { method: "POST" });
+      if (!res.ok) {
+        // Revert on error
+        setIsLiked(previousIsLiked);
+        setLikesCount(previousLikesCount);
       }
-
-      await supabase
-        .from("stories")
-        .update({
-          likes_count: isLiked ? Math.max(0, likesCount - 1) : likesCount + 1,
-        })
-        .eq("id", story.id);
-
-      setIsLiked(!isLiked);
     } catch {
-      // Silently handle errors
+      // Revert on error
+      setIsLiked(previousIsLiked);
+      setLikesCount(previousLikesCount);
     }
   };
 
   const handleBookmarkToggle = async () => {
     if (!session?.user || !story) return;
-    const userId = (session.user as any).id;
+
+    // Optimistic UI update
+    const previousIsBookmarked = isBookmarked;
+    const previousBookmarksCount = bookmarksCount;
+
+    setIsBookmarked(!isBookmarked);
+    setBookmarksCount(isBookmarked ? Math.max(0, bookmarksCount - 1) : bookmarksCount + 1);
 
     try {
-      if (isBookmarked) {
-        await supabase
-          .from("bookmarks")
-          .delete()
-          .eq("story_id", story.id)
-          .eq("user_id", userId);
-        setBookmarksCount((c) => Math.max(0, c - 1));
-      } else {
-        await supabase
-          .from("bookmarks")
-          .insert({ story_id: story.id, user_id: userId });
-        setBookmarksCount((c) => c + 1);
+      const res = await fetch(`/api/stories/${slug}/bookmark`, { method: "POST" });
+      if (!res.ok) {
+        // Revert on error
+        setIsBookmarked(previousIsBookmarked);
+        setBookmarksCount(previousBookmarksCount);
       }
-
-      await supabase
-        .from("stories")
-        .update({
-          bookmarks_count: isBookmarked
-            ? Math.max(0, bookmarksCount - 1)
-            : bookmarksCount + 1,
-        })
-        .eq("id", story.id);
-
-      setIsBookmarked(!isBookmarked);
     } catch {
-      // Silently handle errors
+      // Revert on error
+      setIsBookmarked(previousIsBookmarked);
+      setBookmarksCount(previousBookmarksCount);
     }
   };
 
   const handleCommentSubmit = async () => {
     if (!session?.user || !story || !commentText.trim()) return;
-    const userId = (session.user as any).id;
 
     setSubmittingComment(true);
     try {
-      const { data: newComment } = await supabase
-        .from("comments")
-        .insert({
-          story_id: story.id,
-          user_id: userId,
-          content: commentText.trim(),
-        })
-        .select("*, profiles:user_id(name, username, image)")
-        .single();
+      const res = await fetch(`/api/stories/${slug}/comment`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content: commentText.trim() }),
+      });
 
-      if (newComment) {
-        setComments((prev) => [...prev, newComment]);
-        const newCount = (story.comments_count || 0) + 1;
-        await supabase
-          .from("stories")
-          .update({ comments_count: newCount })
-          .eq("id", story.id);
-        setStory((prev) =>
-          prev ? { ...prev, comments_count: newCount } : prev,
-        );
-        setCommentText("");
+      if (res.ok) {
+        const data = await res.json();
+        const newComment = data.comment;
+        
+        if (newComment) {
+          setComments((prev) => [...prev, newComment]);
+          const newCount = (story.comments_count || 0) + 1;
+          setStory((prev) =>
+            prev ? { ...prev, comments_count: newCount } : prev,
+          );
+          setCommentText("");
+        }
       }
     } catch {
       // Silently handle errors

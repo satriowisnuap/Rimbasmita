@@ -1,0 +1,82 @@
+import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+
+export async function POST(
+  req: Request,
+  { params }: { params: { slug: string } }
+) {
+  try {
+    const session = await getServerSession(authOptions);
+
+    if (!session || !(session.user as any)?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const userId = (session.user as any).id;
+    const { slug } = params;
+
+    // Find the story by slug
+    const story = await prisma.story.findUnique({
+      where: { slug },
+      select: { id: true, likes_count: true }
+    });
+
+    if (!story) {
+      return NextResponse.json({ error: "Story not found" }, { status: 404 });
+    }
+
+    // Check if like exists
+    const existingLike = await prisma.likes.findUnique({
+      where: {
+        user_id_story_id: {
+          user_id: userId,
+          story_id: story.id
+        }
+      }
+    });
+
+    if (existingLike) {
+      // Unlike
+      await prisma.$transaction([
+        prisma.likes.delete({
+          where: {
+            user_id_story_id: {
+              user_id: userId,
+              story_id: story.id
+            }
+          }
+        }),
+        prisma.story.update({
+          where: { id: story.id },
+          data: { likes_count: { decrement: 1 } }
+        })
+      ]);
+      
+      return NextResponse.json({ liked: false });
+    } else {
+      // Like
+      await prisma.$transaction([
+        prisma.likes.create({
+          data: {
+            user_id: userId,
+            story_id: story.id
+          }
+        }),
+        prisma.story.update({
+          where: { id: story.id },
+          data: { likes_count: { increment: 1 } }
+        })
+      ]);
+      
+      return NextResponse.json({ liked: true });
+    }
+  } catch (error) {
+    console.error("Error toggling like:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}
