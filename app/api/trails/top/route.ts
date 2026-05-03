@@ -10,7 +10,7 @@ async function getPrisma() {
 
 export async function GET() {
   try {
-    const prisma = await getPrisma(); // ✅ FIX
+    const prisma = await getPrisma();
 
     const trails = await prisma.trail.findMany({
       include: {
@@ -36,21 +36,26 @@ export async function GET() {
 
     const sortedTrails = trails
       .map((trail) => {
-        const totalActivity =
-          (trail._count.stories || 0) + (trail._count.trail_reviews || 0);
+        const storiesCount = trail._count?.stories || 0;
+        const reviewsCount = trail._count?.trail_reviews || 0;
+
+        const totalActivity = storiesCount + reviewsCount;
+
+        const validRatings =
+          trail.trail_reviews?.map((r) => Number(r.rating) || 0) || [];
 
         const avgRating =
-          trail.trail_reviews.length > 0
-            ? trail.trail_reviews.reduce((acc, r) => acc + r.rating, 0) /
-              trail.trail_reviews.length
+          validRatings.length > 0
+            ? validRatings.reduce((acc, val) => acc + val, 0) /
+              validRatings.length
             : 0;
 
         return {
           ...trail,
           totalActivity,
           avgRating: Number(avgRating.toFixed(1)),
-          storiesCount: trail._count.stories,
-          reviewsCount: trail._count.trail_reviews,
+          storiesCount,
+          reviewsCount,
         };
       })
       .sort((a, b) => b.totalActivity - a.totalActivity)

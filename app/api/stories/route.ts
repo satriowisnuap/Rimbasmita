@@ -13,7 +13,7 @@ async function getPrisma() {
 
 export async function GET() {
   try {
-    const prisma = await getPrisma(); // ✅ FIX
+    const prisma = await getPrisma();
 
     const stories = await prisma.story.findMany({
       where: {
@@ -74,7 +74,7 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
-    const prisma = await getPrisma(); // ✅ FIX
+    const prisma = await getPrisma();
 
     const session = await getServerSession(authOptions);
 
@@ -101,11 +101,12 @@ export async function POST(req: Request) {
       imageUrls,
     } = body;
 
-    if (!title || !title.trim()) {
+    // ✅ VALIDATION
+    if (!title || typeof title !== "string" || !title.trim()) {
       return NextResponse.json({ error: "Title is required" }, { status: 400 });
     }
 
-    if (!content || !content.trim()) {
+    if (!content || typeof content !== "string" || !content.trim()) {
       return NextResponse.json(
         { error: "Content is required" },
         { status: 400 },
@@ -114,14 +115,16 @@ export async function POST(req: Request) {
 
     const slug = generateSlug(title);
 
-    // Create story using Prisma
+    const safeTags = Array.isArray(tags) ? tags : [];
+    const safeImages = Array.isArray(imageUrls) ? imageUrls : [];
+
     const story = await prisma.story.create({
       data: {
         user_id: userId,
         title: title.trim(),
         slug,
         content: content.trim(),
-        excerpt: content.trim().substring(0, 200),
+        excerpt: content.trim().slice(0, 200),
         trail_id: selectedTrail || null,
         difficulty: difficulty || null,
         duration: duration?.trim() || null,
@@ -129,25 +132,27 @@ export async function POST(req: Request) {
         mood: mood || null,
         tips: tips?.trim() || null,
         warnings: warnings?.trim() || null,
-        is_private: isPrivate,
-        is_draft: isDraft,
-        ...(tags &&
-          tags.length > 0 && {
-            story_tags: {
-              create: tags.map((tag: string) => ({
-                tag,
-              })),
-            },
-          }),
-        ...(imageUrls &&
-          imageUrls.length > 0 && {
-            story_images: {
-              create: imageUrls.map((url: string, index: number) => ({
-                image_url: url,
-                display_order: index,
-              })),
-            },
-          }),
+        is_private: Boolean(isPrivate),
+        is_draft: Boolean(isDraft),
+
+        // ✅ tags aman
+        ...(safeTags.length > 0 && {
+          story_tags: {
+            create: safeTags.map((tag: string) => ({
+              tag,
+            })),
+          },
+        }),
+
+        // ✅ images aman
+        ...(safeImages.length > 0 && {
+          story_images: {
+            create: safeImages.map((url: string, index: number) => ({
+              image_url: url,
+              display_order: index,
+            })),
+          },
+        }),
       },
     });
 
