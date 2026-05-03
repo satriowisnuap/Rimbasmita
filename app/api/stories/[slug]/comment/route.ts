@@ -3,9 +3,12 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
 export async function POST(
   req: Request,
-  { params }: { params: { slug: string } }
+  { params }: { params: { slug: string } },
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -20,14 +23,21 @@ export async function POST(
     const body = await req.json();
     const { content } = body;
 
-    if (!content || typeof content !== "string" || content.trim().length === 0) {
-      return NextResponse.json({ error: "Comment content is required" }, { status: 400 });
+    if (
+      !content ||
+      typeof content !== "string" ||
+      content.trim().length === 0
+    ) {
+      return NextResponse.json(
+        { error: "Comment content is required" },
+        { status: 400 },
+      );
     }
 
     // Find the story by slug
     const story = await prisma.story.findUnique({
       where: { slug },
-      select: { id: true, user_id: true }
+      select: { id: true, user_id: true },
     });
 
     if (!story) {
@@ -40,18 +50,18 @@ export async function POST(
         data: {
           user_id: userId,
           story_id: story.id,
-          content: content.trim()
+          content: content.trim(),
         },
         include: {
           profiles: {
-            select: { name: true, username: true, image: true }
-          }
-        }
+            select: { name: true, username: true, image: true },
+          },
+        },
       }),
       prisma.story.update({
         where: { id: story.id },
-        data: { comments_count: { increment: 1 } }
-      })
+        data: { comments_count: { increment: 1 } },
+      }),
     ]);
 
     // Create notification
@@ -61,7 +71,7 @@ export async function POST(
       actorId: userId,
       type: "comment",
       storyId: story.id,
-      message: `mengomentari: "${content.trim().substring(0, 50)}${content.trim().length > 50 ? "..." : ""}"`
+      message: `mengomentari: "${content.trim().substring(0, 50)}${content.trim().length > 50 ? "..." : ""}"`,
     });
 
     return NextResponse.json({ comment }, { status: 201 });
@@ -69,7 +79,7 @@ export async function POST(
     console.error("Error adding comment:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

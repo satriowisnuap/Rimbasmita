@@ -3,9 +3,12 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
 export async function GET(
   req: Request,
-  { params }: { params: { slug: string } }
+  { params }: { params: { slug: string } },
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -20,16 +23,16 @@ export async function GET(
         },
         trails: true,
         story_images: {
-          orderBy: { display_order: 'asc' }
+          orderBy: { display_order: "asc" },
         },
         story_tags: true,
         comments: {
           include: {
             profiles: {
-              select: { name: true, username: true, image: true }
-            }
+              select: { name: true, username: true, image: true },
+            },
           },
-          orderBy: { created_at: 'asc' }
+          orderBy: { created_at: "asc" },
         },
       },
     });
@@ -47,9 +50,9 @@ export async function GET(
         where: {
           user_id_story_id: {
             user_id: userId,
-            story_id: story.id
-          }
-        }
+            story_id: story.id,
+          },
+        },
       });
       isLiked = !!like;
 
@@ -57,9 +60,9 @@ export async function GET(
         where: {
           user_id_story_id: {
             user_id: userId,
-            story_id: story.id
-          }
-        }
+            story_id: story.id,
+          },
+        },
       });
       isBookmarked = !!bookmark;
     }
@@ -72,13 +75,16 @@ export async function GET(
     });
   } catch (error) {
     console.error("Error fetching story:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 },
+    );
   }
 }
 
 export async function PATCH(
   req: Request,
-  { params }: { params: { slug: string } }
+  { params }: { params: { slug: string } },
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -109,7 +115,7 @@ export async function PATCH(
     // Find the story and check ownership
     const existingStory = await prisma.story.findUnique({
       where: { slug },
-      select: { id: true, user_id: true }
+      select: { id: true, user_id: true },
     });
 
     if (!existingStory) {
@@ -140,17 +146,19 @@ export async function PATCH(
         // Update tags: delete old ones and insert new ones
         story_tags: {
           deleteMany: {},
-          create: tags?.map((tag: string) => ({
-            tag,
-          })) || [],
+          create:
+            tags?.map((tag: string) => ({
+              tag,
+            })) || [],
         },
         // Update images: delete old ones and insert new ones
         story_images: {
           deleteMany: {},
-          create: imageUrls?.map((url: string, index: number) => ({
-            image_url: url,
-            display_order: index,
-          })) || [],
+          create:
+            imageUrls?.map((url: string, index: number) => ({
+              image_url: url,
+              display_order: index,
+            })) || [],
         },
       },
     });
@@ -160,7 +168,7 @@ export async function PATCH(
     console.error("Error updating story:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

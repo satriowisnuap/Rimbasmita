@@ -3,9 +3,12 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
 export async function DELETE(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -30,7 +33,7 @@ export async function DELETE(
     if (story.user_id !== userId) {
       return NextResponse.json(
         { error: "Forbidden: You do not own this story" },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -44,7 +47,7 @@ export async function DELETE(
     console.error("Error deleting story:", error);
     return NextResponse.json(
       { error: "Internal Server Error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -3,6 +3,9 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
 async function requireAdmin() {
   const session = await getServerSession(authOptions);
   if (!session || !(session.user as any)?.id) {
@@ -18,7 +21,6 @@ async function requireAdmin() {
   return { error: null, status: 200 };
 }
 
-export const dynamic = "force-dynamic";
 // PATCH — update trail
 export async function PATCH(
   req: Request,
