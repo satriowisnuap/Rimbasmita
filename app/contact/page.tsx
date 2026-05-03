@@ -36,13 +36,19 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { toast } from "sonner";
+
 import emailjs from "@emailjs/browser";
+import { useEffect } from "react";
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "Nama minimal 2 karakter" }),
-  email: z.string().email({ message: "Format email tidak valid" }).min(1, { message: "Email wajib diisi" }),
-  subject: z.string({ required_error: "Silakan pilih subjek" }).min(1, { message: "Silakan pilih subjek" }),
+  email: z
+    .string()
+    .email({ message: "Format email tidak valid" })
+    .min(1, { message: "Email wajib diisi" }),
+  subject: z
+    .string({ required_error: "Silakan pilih subjek" })
+    .min(1, { message: "Silakan pilih subjek" }),
   message: z.string().min(10, { message: "Pesan minimal 10 karakter" }),
 });
 
@@ -60,7 +66,19 @@ const staggerContainer = {
 
 export default function ContactPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitStatus, setSubmitStatus] = useState<"idle" | "success" | "error">("idle");
+  const [submitStatus, setSubmitStatus] = useState<
+    "idle" | "success" | "error"
+  >("idle");
+
+  useEffect(() => {
+    if (submitStatus === "success" || submitStatus === "error") {
+      const timer = setTimeout(() => {
+        setSubmitStatus("idle");
+      }, 4000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [submitStatus]);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -107,29 +125,26 @@ export default function ContactPage() {
         emailjs.send(serviceId, templateId, adminParams, publicKey),
       ];
 
-      const autoReplyTemplateId = process.env.NEXT_PUBLIC_EMAILJS_AUTOREPLY_TEMPLATE_ID;
+      const autoReplyTemplateId =
+        process.env.NEXT_PUBLIC_EMAILJS_AUTOREPLY_TEMPLATE_ID;
       if (autoReplyTemplateId) {
         emailTasks.push(
-          emailjs.send(serviceId, autoReplyTemplateId, userParams, publicKey)
+          emailjs.send(serviceId, autoReplyTemplateId, userParams, publicKey),
         );
       }
 
       const results = await Promise.allSettled(emailTasks);
-      
+
       // Admin notification is the priority for success status
       if (results[0].status === "fulfilled") {
         setSubmitStatus("success");
         form.reset();
-        // We still show toast as a secondary notification
-        toast.success("Pesan terkirim!");
       } else {
         setSubmitStatus("error");
-        toast.error("Gagal mengirim pesan.");
       }
     } catch (error) {
       console.error("Error sending email:", error);
       setSubmitStatus("error");
-      toast.error("Terjadi kesalahan.");
     } finally {
       setIsSubmitting(false);
     }
@@ -256,15 +271,22 @@ export default function ContactPage() {
                       <AnimatePresence mode="wait">
                         {submitStatus === "success" && (
                           <motion.div
+                            key={submitStatus}
                             initial={{ opacity: 0, height: 0 }}
                             animate={{ opacity: 1, height: "auto" }}
                             exit={{ opacity: 0, height: 0 }}
                           >
-                            <Alert variant="success" className="mb-6 rounded-2xl border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                            <Alert
+                              variant="success"
+                              className="mb-6 rounded-2xl border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                            >
                               <CheckCircle2 className="h-4 w-4" />
-                              <AlertTitle className="font-bold">Berhasil!</AlertTitle>
+                              <AlertTitle className="font-bold">
+                                Berhasil!
+                              </AlertTitle>
                               <AlertDescription>
-                                Pesan Anda telah berhasil dikirim. Kami akan segera menghubungi Anda.
+                                Pesan Anda telah berhasil dikirim. Kami akan
+                                segera menghubungi Anda.
                               </AlertDescription>
                             </Alert>
                           </motion.div>
@@ -276,11 +298,17 @@ export default function ContactPage() {
                             animate={{ opacity: 1, height: "auto" }}
                             exit={{ opacity: 0, height: 0 }}
                           >
-                            <Alert variant="destructive" className="mb-6 rounded-2xl">
+                            <Alert
+                              variant="destructive"
+                              className="mb-6 rounded-2xl"
+                            >
                               <AlertCircle className="h-4 w-4" />
-                              <AlertTitle className="font-bold">Gagal!</AlertTitle>
+                              <AlertTitle className="font-bold">
+                                Gagal!
+                              </AlertTitle>
                               <AlertDescription>
-                                Terjadi kesalahan saat mengirim pesan. Silakan coba lagi nanti.
+                                Terjadi kesalahan saat mengirim pesan. Silakan
+                                coba lagi nanti.
                               </AlertDescription>
                             </Alert>
                           </motion.div>
@@ -293,7 +321,9 @@ export default function ContactPage() {
                           name="name"
                           render={({ field }) => (
                             <FormItem className="space-y-2">
-                              <FormLabel className="text-sm font-semibold ml-1">Nama Lengkap</FormLabel>
+                              <FormLabel className="text-sm font-semibold ml-1">
+                                Nama Lengkap
+                              </FormLabel>
                               <div className="relative">
                                 <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                 <FormControl>
@@ -314,7 +344,9 @@ export default function ContactPage() {
                           name="email"
                           render={({ field }) => (
                             <FormItem className="space-y-2">
-                              <FormLabel className="text-sm font-semibold ml-1">Alamat Email</FormLabel>
+                              <FormLabel className="text-sm font-semibold ml-1">
+                                Alamat Email
+                              </FormLabel>
                               <div className="relative">
                                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                 <FormControl>
@@ -336,10 +368,16 @@ export default function ContactPage() {
                         name="subject"
                         render={({ field }) => (
                           <FormItem className="space-y-2">
-                            <FormLabel className="text-sm font-semibold ml-1">Subjek</FormLabel>
+                            <FormLabel className="text-sm font-semibold ml-1">
+                              Subjek
+                            </FormLabel>
                             <div className="relative">
                               <Tag className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" />
-                              <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
+                              <Select
+                                onValueChange={field.onChange}
+                                defaultValue={field.value}
+                                value={field.value}
+                              >
                                 <FormControl>
                                   <SelectTrigger className="pl-10 h-12 rounded-2xl bg-background/50 border-border/50 focus:ring-primary/20 transition-all text-left">
                                     <SelectValue placeholder="Pilih Subjek" />
@@ -348,8 +386,12 @@ export default function ContactPage() {
                                 <SelectContent className="glass-strong rounded-2xl border-border/50 shadow-2xl">
                                   <SelectItem value="Kritik">Kritik</SelectItem>
                                   <SelectItem value="Saran">Saran</SelectItem>
-                                  <SelectItem value="Kerja Sama">Kerja Sama</SelectItem>
-                                  <SelectItem value="Lainnya">Lainnya</SelectItem>
+                                  <SelectItem value="Kerja Sama">
+                                    Kerja Sama
+                                  </SelectItem>
+                                  <SelectItem value="Lainnya">
+                                    Lainnya
+                                  </SelectItem>
                                 </SelectContent>
                               </Select>
                             </div>
@@ -363,7 +405,9 @@ export default function ContactPage() {
                         name="message"
                         render={({ field }) => (
                           <FormItem className="space-y-2">
-                            <FormLabel className="text-sm font-semibold ml-1">Pesan</FormLabel>
+                            <FormLabel className="text-sm font-semibold ml-1">
+                              Pesan
+                            </FormLabel>
                             <FormControl>
                               <Textarea
                                 placeholder="Tuliskan pesan Anda di sini..."
