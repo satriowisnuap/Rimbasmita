@@ -1,33 +1,43 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
+async function getPrisma() {
+  const { prisma } = await import("@/lib/prisma");
+  return prisma;
+}
+
 async function requireAdmin() {
+  const prisma = await getPrisma(); // ✅ FIX
   const session = await getServerSession(authOptions);
+
   if (!session || !(session.user as any)?.id) {
     return { error: "Unauthorized", status: 401 };
   }
+
   const profile = await prisma.profile.findUnique({
     where: { id: (session.user as any).id },
     select: { role: true },
   });
+
   if (profile?.role !== "admin") {
     return { error: "Forbidden", status: 403 };
   }
+
   return { error: null, status: 200 };
 }
-
 
 // PATCH — update trail
 export async function PATCH(
   req: Request,
   { params }: { params: { id: string } },
 ) {
+  const prisma = await getPrisma(); // ✅ FIX
   const { error, status } = await requireAdmin();
+
   if (error) return NextResponse.json({ error }, { status });
 
   try {
@@ -72,7 +82,9 @@ export async function DELETE(
   _req: Request,
   { params }: { params: { id: string } },
 ) {
+  const prisma = await getPrisma(); // ✅ FIX
   const { error, status } = await requireAdmin();
+
   if (error) return NextResponse.json({ error }, { status });
 
   try {
@@ -83,7 +95,11 @@ export async function DELETE(
     if (!existing) {
       return NextResponse.json({ error: "Trail not found" }, { status: 404 });
     }
-    await prisma.trail.delete({ where: { id: params.id } });
+
+    await prisma.trail.delete({
+      where: { id: params.id },
+    });
+
     return NextResponse.json({ success: true });
   } catch (err) {
     console.error("Error deleting trail:", err);
