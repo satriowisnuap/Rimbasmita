@@ -44,6 +44,8 @@ export interface Story {
     image_url: string;
     display_order: number;
   }[];
+  is_private: boolean;
+  is_draft: boolean;
 }
 
 export interface UseProfileReturn {
@@ -82,7 +84,7 @@ export interface UseProfileReturn {
 }
 
 export function useProfile(): UseProfileReturn {
-  const { data: session } = useSession();
+  const { data: session, status: sessionStatus } = useSession();
   const params = useParams();
   const username = params.username as string;
 
@@ -103,198 +105,94 @@ export function useProfile(): UseProfileReturn {
 
   const [isFollowing, setIsFollowing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
+  const [isOwnProfile, setIsOwnProfile] = useState(false);
 
-  const currentUserId = (session?.user as any)?.id;
-  const isOwnProfile = currentUserId === profile?.id;
+  const fetchProfileData = useCallback(async () => {
+    if (!username) return;
 
-  // Fetch profile data
-  useEffect(() => {
-    const fetchProfile = async () => {
+    try {
       setLoading(true);
-      setProfileNotFound(false);
-
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("username", username)
-        .single();
-
-      if (error || !data) {
+      setStoriesLoading(true);
+      
+      const res = await fetch(`/api/profile/${username}`);
+      if (res.status === 404) {
         setProfileNotFound(true);
         setLoading(false);
         return;
       }
+      
+      if (!res.ok) throw new Error("Failed to fetch profile");
 
-      setProfile(data);
+      const data = await res.json();
+      
+      setProfile(data.profile);
+      setStoriesCount(data.stats.storiesCount);
+      setTotalLikes(data.stats.totalLikes);
+      setTrailsVisited(data.stats.trailsVisited);
+      setFollowersCount(data.stats.followersCount);
+      setFollowingCount(data.stats.followingCount);
+      setIsFollowing(data.isFollowing);
+      setIsOwnProfile(data.isOwnProfile);
+      
+      // Parse stories to match the expected interface (array wrapping for consistency)
+      const parseStories = (stories: any[]) => stories.map(s => ({
+        ...s,
+        profiles: s.profiles ? (Array.isArray(s.profiles) ? s.profiles : [s.profiles]) : null,
+        trails: s.trails ? (Array.isArray(s.trails) ? s.trails : [s.trails]) : null,
+      }));
 
-      // Fetch stats in parallel
-      const storiesQuery = supabase
-        .from("stories")
-        .select("id, likes_count, trail_id", { count: "exact" })
-        .eq("user_id", data.id)
-        .eq("is_draft", false);
-
-      if (currentUserId !== data.id) {
-        storiesQuery.eq("is_private", false);
-      }
-
-      const [storiesRes, followersRes, followingRes] =
-        await Promise.all([
-          storiesQuery,
-          supabase
-            .from("follows")
-            .select("id", { count: "exact" })
-            .eq("following_id", data.id),
-          supabase
-            .from("follows")
-            .select("id", { count: "exact" })
-            .eq("follower_id", data.id),
-        ]);
-
-      setStoriesCount(storiesRes.count || 0);
-      setTotalLikes(
-        (storiesRes.data || []).reduce((sum: number, s: any) => sum + (s.likes_count || 0), 0),
-      );
-      const uniqueTrails = new Set(
-        (storiesRes.data || []).map((t: any) => t.trail_id).filter(Boolean),
-      );
-      setTrailsVisited(uniqueTrails.size);
-      setFollowersCount(followersRes.count || 0);
-      setFollowingCount(followingRes.count || 0);
-
-      // Check follow status
-      if (currentUserId && currentUserId !== data.id) {
-        const { data: followData } = await supabase
-          .from("follows")
-          .select("id")
-          .eq("follower_id", currentUserId)
-          .eq("following_id", data.id)
-          .maybeSingle();
-
-        setIsFollowing(!!followData);
-      }
-
+      setStories(parseStories(data.stories || []));
+      setBookmarkedStories(parseStories(data.bookmarkedStories || []));
+      
+      setProfileNotFound(false);
+    } catch (error) {
+      console.error("Error in fetchProfileData:", error);
+    } finally {
       setLoading(false);
-    };
-
-    if (username) {
-      fetchProfile();
+      setStoriesLoading(false);
     }
-  }, [username, currentUserId]);
-
-  // Fetch stories for active tab
-    const fetchStories = useCallback(async () => {
-    if (!profile) return;
-
-    setStoriesLoading(true);
-
-    if (activeTab === "cerita") {
-      let query = supabase
-        .from("stories")
-        .select(
-          `id, title, slug, excerpt, difficulty, duration, mood, likes_count, comments_count, created_at, is_private, is_draft,
-          trails:trail_id(name, location),
-          story_images(image_url, display_order)`,
-        )
-        .eq("user_id", profile.id)
-        .eq("is_draft", false);
-
-      // Only show private stories if it's the owner's profile
-      if (!isOwnProfile) {
-        query = query.eq("is_private", false);
-      }
-
-      const { data, error } = await query.order("created_at", { ascending: false });
-
-      if (!error && data) {
-        setStories(
-          data.map((s) => ({
-            ...s,
-            profiles: [
-              {
-                name: profile.name,
-                username: profile.username,
-                image: profile.image,
-              },
-            ],
-            trails: Array.isArray(s.trails) ? s.trails : s.trails ? [s.trails] : null,
-          })),
-        );
-      }
-    } else {
-      const { data, error } = await supabase
-        .from("bookmarks")
-        .select(
-          `story_id, stories(id, title, slug, excerpt, difficulty, duration, mood, likes_count, comments_count, created_at, is_private, is_draft,
-          profiles:user_id(name, username, image),
-          trails:trail_id(name, location),
-          story_images(image_url, display_order))`,
-        )
-        .eq("user_id", profile.id)
-        .order("created_at", { ascending: false });
-
-      if (!error && data) {
-        const parsed = data
-          .filter((b: any) => b.stories !== null)
-          .map((b: any) => {
-            const s = b.stories;
-            return {
-              ...s,
-              profiles: Array.isArray(s.profiles)
-                ? s.profiles
-                : s.profiles
-                  ? [s.profiles]
-                  : null,
-              trails: Array.isArray(s.trails)
-                ? s.trails
-                : s.trails
-                  ? [s.trails]
-                  : null,
-            } as Story;
-          });
-        setBookmarkedStories(parsed);
-      }
-    }
-
-    setStoriesLoading(false);
-  }, [profile, activeTab, isOwnProfile]);
+  }, [username]);
 
   useEffect(() => {
-    if (profile) {
-      fetchStories();
+    if (sessionStatus !== "loading") {
+      fetchProfileData();
     }
-  }, [profile, activeTab, fetchStories]);
+  }, [username, sessionStatus, fetchProfileData]);
 
   // Follow / Unfollow toggle
   const handleFollowToggle = async () => {
-    if (!profile || !currentUserId || followLoading) return;
+    if (!profile || !session?.user || followLoading) return;
 
     setFollowLoading(true);
 
-    if (isFollowing) {
-      const { error } = await supabase
-        .from("follows")
-        .delete()
-        .eq("follower_id", currentUserId)
-        .eq("following_id", profile.id);
+    try {
+      if (isFollowing) {
+        const { error } = await supabase
+          .from("follows")
+          .delete()
+          .eq("follower_id", (session.user as any).id)
+          .eq("following_id", profile.id);
 
-      if (!error) {
-        setIsFollowing(false);
-        setFollowersCount((prev) => prev - 1);
-      }
-    } else {
-      const { error } = await supabase.from("follows").insert({
-        follower_id: currentUserId,
-        following_id: profile.id,
-      });
+        if (!error) {
+          setIsFollowing(false);
+          setFollowersCount((prev) => prev - 1);
+        }
+      } else {
+        const { error } = await supabase.from("follows").insert({
+          follower_id: (session.user as any).id,
+          following_id: profile.id,
+        });
 
-      if (!error) {
-        setIsFollowing(true);
-        setFollowersCount((prev) => prev + 1);
+        if (!error) {
+          setIsFollowing(true);
+          setFollowersCount((prev) => prev + 1);
+        }
       }
+    } catch (err) {
+      console.error("Follow toggle error:", err);
+    } finally {
+      setFollowLoading(false);
     }
-
-    setFollowLoading(false);
   };
 
   // Helper
