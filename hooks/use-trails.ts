@@ -11,6 +11,9 @@ export interface Trail {
   difficulty?: string | null;
   image?: string | null;
   estimated_duration?: string | null;
+  avgRating?: number;
+  storiesCount?: number;
+  reviewsCount?: number;
 }
 
 export function useTrails(limit = 100) {
@@ -49,6 +52,29 @@ export function useTrails(limit = 100) {
 
     fetchTrails();
   }, [limit]);
+
+  return { trails, loading };
+}
+export function useTopTrails() {
+  const [trails, setTrails] = useState<Trail[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchTopTrails = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch("/api/trails/top");
+        const data = await response.json();
+        setTrails(data);
+      } catch (error) {
+        console.error("Error fetching top trails:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTopTrails();
+  }, []);
 
   return { trails, loading };
 }

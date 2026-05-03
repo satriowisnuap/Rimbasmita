@@ -1,14 +1,14 @@
 "use client";
 
-import { Compass, MapPin, ArrowUp, ArrowRight } from "lucide-react";
-import { useTrails } from "@/hooks/use-trails";
+import { Compass, MapPin, ArrowUp, ArrowRight, Star, BookOpen } from "lucide-react";
+import { useTopTrails } from "@/hooks/use-trails";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 
 export default function TrailsSection({ fadeInUp, stagger }: any) {
-  const { trails, loading } = useTrails(9);
+  const { trails, loading } = useTopTrails();
 
   // ✅ state untuk semua image
   const [loadedImages, setLoadedImages] = useState<Record<string, boolean>>({});
@@ -88,19 +88,34 @@ export default function TrailsSection({ fadeInUp, stagger }: any) {
                       />
                     )}
 
-                    <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+
+                    <div className="absolute top-4 right-4 flex flex-col gap-2">
+                      {trail.avgRating && trail.avgRating > 0 && (
+                        <div className="bg-black/40 backdrop-blur-md px-2.5 py-1 rounded-xl border border-white/10 flex items-center gap-1.5 shadow-lg">
+                          <Star className="h-3 w-3 text-amber-400 fill-amber-400" />
+                          <span className="text-xs font-bold text-white">{trail.avgRating}</span>
+                        </div>
+                      )}
+                      {(trail.storiesCount ?? 0) > 0 && (
+                        <div className="bg-black/40 backdrop-blur-md px-2.5 py-1 rounded-xl border border-white/10 flex items-center gap-1.5 shadow-lg">
+                          <BookOpen className="h-3 w-3 text-white" />
+                          <span className="text-xs font-bold text-white">{trail.storiesCount}</span>
+                        </div>
+                      )}
+                    </div>
 
                     <div className="absolute bottom-4 left-4 right-4">
-                      <h3 className="text-xl font-bold text-foreground">
+                      <h3 className="text-xl font-bold text-white">
                         {trail.name}
                       </h3>
-                      <div className="flex items-center gap-3 mt-1 text-sm text-foreground/70">
+                      <div className="flex items-center gap-3 mt-1 text-xs text-white/80">
                         <span className="flex items-center gap-1">
-                          <MapPin className="h-3.5 w-3.5" />
+                          <MapPin className="h-3 w-3" />
                           {trail.location}
                         </span>
                         <span className="flex items-center gap-1">
-                          <ArrowUp className="h-3.5 w-3.5" />
+                          <ArrowUp className="h-3 w-3" />
                           {trail.elevation.toLocaleString("id-ID")} mdpl
                         </span>
                       </div>
