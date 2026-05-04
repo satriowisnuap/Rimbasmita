@@ -8,23 +8,38 @@ import {
   Star,
   BookOpen,
 } from "lucide-react";
-import { useTopTrails } from "@/hooks/use-trails";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 
-export default function TrailsSection({ fadeInUp, stagger }: any) {
-  const { trails, loading } = useTopTrails();
-  const [loadedImages, setLoadedImages] = useState<Record<string, boolean>>({});
+interface Trail {
+  id: string;
+  name: string;
+  location: string;
+  elevation: number | null;
+  image?: string | null;
+  avgRating?: number;
+  storiesCount?: number;
+}
 
-  // Guard: pastikan trails adalah array
+export default function TrailsSection({
+  fadeInUp,
+  stagger,
+  trails,
+  loading,
+}: {
+  fadeInUp: any;
+  stagger: any;
+  trails: Trail[];
+  loading: boolean;
+}) {
+  const [loadedImages, setLoadedImages] = useState<Record<string, boolean>>({});
   const safeTrails = Array.isArray(trails) ? trails : [];
 
   if (loading) return null;
 
-  // Tampilkan pesan jika kosong atau error
-  if (!loading && safeTrails.length === 0) {
+  if (safeTrails.length === 0) {
     return (
       <section className="py-24 px-4 bg-card/30">
         <div className="max-w-7xl mx-auto text-center text-muted-foreground">
@@ -54,14 +69,12 @@ export default function TrailsSection({ fadeInUp, stagger }: any) {
               Jalur Populer
             </span>
           </motion.div>
-
           <motion.h2
             variants={fadeInUp}
             className="text-3xl sm:text-4xl font-bold text-foreground mb-4"
           >
             Mulai dari jalur yang sudah dikenal
           </motion.h2>
-
           <motion.p
             variants={fadeInUp}
             className="text-lg text-muted-foreground max-w-2xl mx-auto"
@@ -74,7 +87,6 @@ export default function TrailsSection({ fadeInUp, stagger }: any) {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {safeTrails.map((trail, i) => {
             const isLoaded = loadedImages[trail.id];
-
             return (
               <motion.div
                 key={trail.id}
@@ -86,12 +98,9 @@ export default function TrailsSection({ fadeInUp, stagger }: any) {
                 <Link href={`/trails/${trail.id}`}>
                   <div className="glass rounded-2xl overflow-hidden group cursor-pointer h-full">
                     <div className="relative h-56 overflow-hidden">
-                      {/* SKELETON */}
                       {!isLoaded && (
                         <div className="absolute inset-0 animate-pulse bg-muted" />
                       )}
-
-                      {/* IMAGE */}
                       {trail.image && (
                         <Image
                           src={trail.image}
@@ -108,9 +117,7 @@ export default function TrailsSection({ fadeInUp, stagger }: any) {
                           }`}
                         />
                       )}
-
                       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-
                       <div className="absolute top-4 right-4 flex flex-col gap-2">
                         {(trail.avgRating ?? 0) > 0 && (
                           <div className="bg-black/40 backdrop-blur-md px-2.5 py-1 rounded-xl border border-white/10 flex items-center gap-1.5 shadow-lg">
@@ -129,7 +136,6 @@ export default function TrailsSection({ fadeInUp, stagger }: any) {
                           </div>
                         )}
                       </div>
-
                       <div className="absolute bottom-4 left-4 right-4">
                         <h3 className="text-xl font-bold text-white">
                           {trail.name}
@@ -139,7 +145,6 @@ export default function TrailsSection({ fadeInUp, stagger }: any) {
                             <MapPin className="h-3 w-3" />
                             {trail.location}
                           </span>
-                          {/* Guard elevation - bisa null/undefined */}
                           {trail.elevation != null && (
                             <span className="flex items-center gap-1">
                               <ArrowUp className="h-3 w-3" />

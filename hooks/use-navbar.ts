@@ -33,7 +33,7 @@ export function useNavbar() {
     : [
         { href: "/explore", label: "Explore", icon: Compass },
         ...(isHome
-          ? [{ href: "/stories", label: "Cerita", icon: Scroll }]
+          ? [{ href: "/stories", label: "Stories", icon: Scroll }]
           : []),
       ];
 
