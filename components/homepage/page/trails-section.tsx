@@ -1,6 +1,13 @@
 "use client";
 
-import { Compass, MapPin, ArrowUp, ArrowRight, Star, BookOpen } from "lucide-react";
+import {
+  Compass,
+  MapPin,
+  ArrowUp,
+  ArrowRight,
+  Star,
+  BookOpen,
+} from "lucide-react";
 import { useTopTrails } from "@/hooks/use-trails";
 import { motion } from "framer-motion";
 import Image from "next/image";
@@ -9,11 +16,24 @@ import { useState } from "react";
 
 export default function TrailsSection({ fadeInUp, stagger }: any) {
   const { trails, loading } = useTopTrails();
-
-  // ✅ state untuk semua image
   const [loadedImages, setLoadedImages] = useState<Record<string, boolean>>({});
 
+  // Guard: pastikan trails adalah array
+  const safeTrails = Array.isArray(trails) ? trails : [];
+
   if (loading) return null;
+
+  // Tampilkan pesan jika kosong atau error
+  if (!loading && safeTrails.length === 0) {
+    return (
+      <section className="py-24 px-4 bg-card/30">
+        <div className="max-w-7xl mx-auto text-center text-muted-foreground">
+          <Compass className="h-10 w-10 mx-auto mb-3 opacity-30" />
+          <p className="text-sm">Jalur belum tersedia saat ini.</p>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="py-24 px-4 bg-card/30">
@@ -52,7 +72,7 @@ export default function TrailsSection({ fadeInUp, stagger }: any) {
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {trails.map((trail, i) => {
+          {safeTrails.map((trail, i) => {
             const isLoaded = loadedImages[trail.id];
 
             return (
@@ -66,12 +86,12 @@ export default function TrailsSection({ fadeInUp, stagger }: any) {
                 <Link href={`/trails/${trail.id}`}>
                   <div className="glass rounded-2xl overflow-hidden group cursor-pointer h-full">
                     <div className="relative h-56 overflow-hidden">
-                      {/* ✅ SKELETON */}
+                      {/* SKELETON */}
                       {!isLoaded && (
                         <div className="absolute inset-0 animate-pulse bg-muted" />
                       )}
 
-                      {/* ✅ IMAGE */}
+                      {/* IMAGE */}
                       {trail.image && (
                         <Image
                           src={trail.image}
@@ -92,16 +112,20 @@ export default function TrailsSection({ fadeInUp, stagger }: any) {
                       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
 
                       <div className="absolute top-4 right-4 flex flex-col gap-2">
-                        {trail.avgRating && trail.avgRating > 0 && (
+                        {(trail.avgRating ?? 0) > 0 && (
                           <div className="bg-black/40 backdrop-blur-md px-2.5 py-1 rounded-xl border border-white/10 flex items-center gap-1.5 shadow-lg">
                             <Star className="h-3 w-3 text-amber-400 fill-amber-400" />
-                            <span className="text-xs font-bold text-white">{trail.avgRating}</span>
+                            <span className="text-xs font-bold text-white">
+                              {trail.avgRating}
+                            </span>
                           </div>
                         )}
                         {(trail.storiesCount ?? 0) > 0 && (
                           <div className="bg-black/40 backdrop-blur-md px-2.5 py-1 rounded-xl border border-white/10 flex items-center gap-1.5 shadow-lg">
                             <BookOpen className="h-3 w-3 text-white" />
-                            <span className="text-xs font-bold text-white">{trail.storiesCount}</span>
+                            <span className="text-xs font-bold text-white">
+                              {trail.storiesCount}
+                            </span>
                           </div>
                         )}
                       </div>
@@ -115,10 +139,16 @@ export default function TrailsSection({ fadeInUp, stagger }: any) {
                             <MapPin className="h-3 w-3" />
                             {trail.location}
                           </span>
-                          <span className="flex items-center gap-1">
-                            <ArrowUp className="h-3 w-3" />
-                            {trail.elevation.toLocaleString("id-ID")} mdpl
-                          </span>
+                          {/* Guard elevation - bisa null/undefined */}
+                          {trail.elevation != null && (
+                            <span className="flex items-center gap-1">
+                              <ArrowUp className="h-3 w-3" />
+                              {Number(trail.elevation).toLocaleString(
+                                "id-ID",
+                              )}{" "}
+                              mdpl
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>

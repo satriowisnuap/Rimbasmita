@@ -10,12 +10,20 @@ async function getPrisma() {
 
 export async function GET(
   req: Request,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const prisma = await getPrisma(); // ✅ FIX
+    const prisma = await getPrisma();
 
-    const { id } = params;
+    // ✅ await params — wajib di Next.js 15
+    const { id } = await params;
+
+    if (!id) {
+      return NextResponse.json(
+        { error: "Trail ID is required" },
+        { status: 400 },
+      );
+    }
 
     const trail = await prisma.trail.findUnique({
       where: { id },

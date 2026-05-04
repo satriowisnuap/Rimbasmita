@@ -132,7 +132,7 @@ function StoryCardItem({ story }: { story: StoryCard }) {
           )}
 
           {/* Tags */}
-          {story.story_tags.length > 0 && (
+          {(story.story_tags ?? []).length > 0 && (
             <div className="flex flex-wrap gap-1">
               {story.story_tags.map((t, i) => (
                 <span
