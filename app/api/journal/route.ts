@@ -1,13 +1,19 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
+async function getPrisma() {
+  const { prisma } = await import("@/lib/prisma");
+  return prisma;
+}
+
 export async function GET(req: Request) {
   try {
+    const prisma = await getPrisma(); // ✅ FIX
+
     const session = await getServerSession(authOptions);
 
     if (!session || !(session.user as any)?.id) {

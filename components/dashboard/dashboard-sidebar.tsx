@@ -33,13 +33,14 @@ interface Props {
 export function DashboardSidebar(props: Props) {
   const { data: session } = useSession();
 
-  const user = session?.user;
+  // ✅ Cast ke any agar bisa akses field custom (id, username, role)
+  const user = session?.user as any;
 
-  // 🔥 fallback logic (props > session)
-  const username = props.username ?? user?.username;
+  // ✅ Baca role dari: props → session (urutan prioritas)
+  const username = props.username ?? user?.username ?? null;
   const userName = props.userName ?? user?.name ?? "Pendaki";
-  const userImage = props.userImage ?? user?.image;
-  const role = props.role ?? null;
+  const userImage = props.userImage ?? user?.image ?? null;
+  const role = props.role ?? user?.role ?? null; // ✅ FIX UTAMA
 
   const stats = props.stats || {
     totalStories: 0,
@@ -106,7 +107,7 @@ export function DashboardSidebar(props: Props) {
           </div>
         </motion.div>
 
-        {/* Admin Panel — only visible for admins */}
+        {/* Admin Panel — hanya tampil jika role === "admin" */}
         {role === "admin" && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -116,7 +117,9 @@ export function DashboardSidebar(props: Props) {
           >
             <div className="flex items-center gap-2 px-4 py-3 border-b border-primary/10">
               <Shield className="h-4 w-4 text-primary" />
-              <span className="text-xs font-bold text-primary uppercase tracking-wider">Admin Panel</span>
+              <span className="text-xs font-bold text-primary uppercase tracking-wider">
+                Admin Panel
+              </span>
             </div>
             <div className="p-3 space-y-1">
               <Link
@@ -148,28 +151,36 @@ export function DashboardSidebar(props: Props) {
                 <FileText className="h-3.5 w-3.5" />
                 Cerita ditulis
               </span>
-              <span className="text-sm font-semibold text-foreground">{stats.totalStories}</span>
+              <span className="text-sm font-semibold text-foreground">
+                {stats.totalStories}
+              </span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground flex items-center gap-2">
                 <Heart className="h-3.5 w-3.5" />
                 Total suka
               </span>
-              <span className="text-sm font-semibold text-foreground">{stats.totalLikes}</span>
+              <span className="text-sm font-semibold text-foreground">
+                {stats.totalLikes}
+              </span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground flex items-center gap-2">
                 <Mountain className="h-3.5 w-3.5" />
                 Jalur dijelajahi
               </span>
-              <span className="text-sm font-semibold text-foreground">{stats.trailsExplored}</span>
+              <span className="text-sm font-semibold text-foreground">
+                {stats.trailsExplored}
+              </span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground flex items-center gap-2">
                 <TrendingUp className="h-3.5 w-3.5" />
                 Hari berturut
               </span>
-              <span className="text-sm font-semibold text-foreground">{stats.streakDays}</span>
+              <span className="text-sm font-semibold text-foreground">
+                {stats.streakDays}
+              </span>
             </div>
           </div>
         </motion.div>

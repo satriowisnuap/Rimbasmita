@@ -1,16 +1,27 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
+
+async function getPrisma() {
+  const { prisma } = await import("@/lib/prisma");
+  return prisma;
+}
+
+// GET stub — required by Next.js 13 build for dynamic routes
+export async function GET() {
+  return NextResponse.json({ error: "Method not allowed" }, { status: 405 });
+}
 
 export async function PATCH(
   req: Request,
   { params }: { params: { id: string } },
 ) {
   try {
+    const prisma = await getPrisma(); // ✅ FIX
+
     const session = await getServerSession(authOptions);
 
     if (!session || !(session.user as any)?.id) {

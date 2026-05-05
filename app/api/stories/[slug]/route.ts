@@ -1,16 +1,22 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
+
+async function getPrisma() {
+  const { prisma } = await import("@/lib/prisma");
+  return prisma;
+}
 
 export async function GET(
   req: Request,
   { params }: { params: { slug: string } },
 ) {
   try {
+    const prisma = await getPrisma(); // ✅ FIX
+
     const session = await getServerSession(authOptions);
     const userId = (session?.user as any)?.id;
     const { slug } = params;
@@ -41,7 +47,6 @@ export async function GET(
       return NextResponse.json({ error: "Story not found" }, { status: 404 });
     }
 
-    // Check if the current user has liked or bookmarked the story
     let isLiked = false;
     let isBookmarked = false;
 
@@ -87,6 +92,8 @@ export async function PATCH(
   { params }: { params: { slug: string } },
 ) {
   try {
+    const prisma = await getPrisma(); // ✅ FIX
+
     const session = await getServerSession(authOptions);
     if (!session || !(session.user as any)?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -112,7 +119,6 @@ export async function PATCH(
       imageUrls,
     } = body;
 
-    // Find the story and check ownership
     const existingStory = await prisma.story.findUnique({
       where: { slug },
       select: { id: true, user_id: true },
@@ -126,7 +132,6 @@ export async function PATCH(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    // Update story
     const updatedStory = await prisma.story.update({
       where: { id: existingStory.id },
       data: {
@@ -143,7 +148,6 @@ export async function PATCH(
         is_private: isPrivate,
         is_draft: isDraft,
         updated_at: new Date(),
-        // Update tags: delete old ones and insert new ones
         story_tags: {
           deleteMany: {},
           create:
@@ -151,7 +155,6 @@ export async function PATCH(
               tag,
             })) || [],
         },
-        // Update images: delete old ones and insert new ones
         story_images: {
           deleteMany: {},
           create:

@@ -8,7 +8,7 @@ import { Toaster } from "@/components/ui/sonner";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://rimbasmita.com"),
+  metadataBase: new URL("https://rimbasmita.vercel.app/"),
 
   title: {
     default: "Rimbasmita — Setiap langkah punya cerita",
@@ -42,7 +42,7 @@ export const metadata: Metadata = {
     title: "Rimbasmita — Setiap langkah punya cerita",
     description:
       "Platform berbagi cerita pendakian dan refleksi perjalanan. Dibangun oleh Satrio Wisnu Adi Pratama.",
-    url: "https://rimbasmita.com",
+    url: "https://rimbasmita.vercel.app/",
     siteName: "Rimbasmita",
     images: [
       {
@@ -90,7 +90,7 @@ export default function RootLayout({
                     "@context": "https://schema.org",
                     "@type": "Person",
                     name: "Satrio Wisnu Adi Pratama",
-                    url: "https://rimbasmita.com",
+                    url: "https://rimbasmita.vercel.app/",
                     sameAs: [
                       "https://github.com/satriowisnuap",
                       "https://www.linkedin.com/in/satrio-wisnu-adi-pratama-79776928a/",
@@ -104,7 +104,7 @@ export default function RootLayout({
                     "@context": "https://schema.org",
                     "@type": "WebSite",
                     name: "Rimbasmita",
-                    url: "https://rimbasmita.com",
+                    url: "https://rimbasmita.vercel.app/",
                     author: {
                       "@type": "Person",
                       name: "Satrio Wisnu Adi Pratama",

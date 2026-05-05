@@ -1,16 +1,22 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
+
+async function getPrisma() {
+  const { prisma } = await import("@/lib/prisma");
+  return prisma;
+}
 
 export async function GET(
   req: Request,
   { params }: { params: { username: string } },
 ) {
   try {
+    const prisma = await getPrisma(); // ✅ FIX
+
     const session = await getServerSession(authOptions);
     const currentUserId = (session?.user as any)?.id;
     const { username } = params;
@@ -43,6 +49,7 @@ export async function GET(
       },
       select: { likes_count: true },
     });
+
     const totalLikes = storiesForLikes.reduce(
       (sum, s) => sum + (s.likes_count || 0),
       0,
@@ -57,6 +64,7 @@ export async function GET(
       select: { trail_id: true },
       distinct: ["trail_id"],
     });
+
     const trailsVisited = storiesForTrails.filter((s) => s.trail_id).length;
 
     const followersCount = await prisma.follows.count({
@@ -81,7 +89,7 @@ export async function GET(
       isFollowing = !!follow;
     }
 
-    // Fetch stories for the initial tab (cerita)
+    // Fetch stories
     const stories = await prisma.story.findMany({
       where: {
         user_id: profile.id,
@@ -102,7 +110,7 @@ export async function GET(
       orderBy: { created_at: "desc" },
     });
 
-    // Fetch bookmarks (separate tab)
+    // Fetch bookmarks
     const bookmarks = await prisma.bookmarks.findMany({
       where: { user_id: profile.id },
       include: {
@@ -123,12 +131,11 @@ export async function GET(
       orderBy: { created_at: "desc" },
     });
 
-    // Filter bookmarks for privacy
     const filteredBookmarks = bookmarks
       .map((b) => b.stories)
       .filter((s) => {
         if (!s) return false;
-        if (s.is_draft) return false; // Bookmarks shouldn't be drafts anyway
+        if (s.is_draft) return false;
         if (!s.is_private) return true;
         return s.user_id === currentUserId;
       });

@@ -6,14 +6,11 @@ import {
   Heart,
   MessageCircle,
   MapPin,
-  User,
   ArrowRight,
   Quote,
 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { formatDistanceToNow } from "date-fns";
-import { id as idLocale } from "date-fns/locale";
 
 interface StoryCard {
   id: string;
@@ -46,26 +43,6 @@ const difficultyColor: Record<string, string> = {
   extreme: "bg-red-500/20 text-red-400",
 };
 
-const moodEmoji: Record<string, string> = {
-  peaceful: "🌿",
-  adventurous: "⚡",
-  reflective: "🌙",
-  exhilarated: "🔥",
-  grateful: "🙏",
-  challenged: "💪",
-};
-
-function formatTime(dateStr: string) {
-  try {
-    return formatDistanceToNow(new Date(dateStr), {
-      addSuffix: true,
-      locale: idLocale,
-    });
-  } catch {
-    return "";
-  }
-}
-
 function StoryCardItem({ story }: { story: StoryCard }) {
   const router = useRouter();
   const coverImage = story.story_images?.[0]?.image_url;
@@ -80,7 +57,6 @@ function StoryCardItem({ story }: { story: StoryCard }) {
       className="cursor-pointer min-w-[300px] max-w-[300px]"
     >
       <div className="glass rounded-2xl overflow-hidden h-[340px] flex flex-col group hover:shadow-xl hover:shadow-primary/10 transition-shadow duration-500">
-        {/* Cover Image or Gradient placeholder */}
         <div className="relative h-[130px] flex-shrink-0 overflow-hidden">
           {coverImage ? (
             <img
@@ -93,10 +69,8 @@ function StoryCardItem({ story }: { story: StoryCard }) {
               <Quote className="h-10 w-10 text-primary/30" />
             </div>
           )}
-          {/* overlay */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
 
-          {/* Difficulty badge */}
           {story.difficulty && (
             <span
               className={`absolute top-3 right-3 px-2 py-0.5 rounded-full text-[10px] font-bold backdrop-blur-sm ${difficultyColor[story.difficulty] ?? "bg-muted/80 text-muted-foreground"}`}
@@ -106,7 +80,6 @@ function StoryCardItem({ story }: { story: StoryCard }) {
             </span>
           )}
 
-          {/* Trail info */}
           {story.trails && (
             <div className="absolute bottom-2 left-3 flex items-center gap-1 text-white/80 text-[10px]">
               <MapPin className="h-3 w-3" />
@@ -117,24 +90,21 @@ function StoryCardItem({ story }: { story: StoryCard }) {
           )}
         </div>
 
-        {/* Content */}
         <div className="flex flex-col flex-1 p-4 gap-2">
-          {/* Title */}
           <h3 className="text-sm font-bold text-foreground leading-snug line-clamp-2 group-hover:text-primary transition-colors duration-200">
             {story.title}
           </h3>
 
-          {/* Excerpt */}
           {story.excerpt && (
             <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2">
               {story.excerpt}
             </p>
           )}
 
-          {/* Tags */}
-          {story.story_tags.length > 0 && (
+          {/* ✅ Guard story_tags null/undefined */}
+          {(story.story_tags ?? []).length > 0 && (
             <div className="flex flex-wrap gap-1">
-              {story.story_tags.map((t, i) => (
+              {(story.story_tags ?? []).map((t, i) => (
                 <span
                   key={i}
                   className="px-1.5 py-0.5 rounded-full bg-primary/10 text-primary text-[9px] font-medium"
@@ -145,9 +115,7 @@ function StoryCardItem({ story }: { story: StoryCard }) {
             </div>
           )}
 
-          {/* Footer */}
           <div className="mt-auto flex items-center justify-between pt-2 border-t border-border/30">
-            {/* Author */}
             <div className="flex items-center gap-1.5 min-w-0">
               {story.profiles?.image ? (
                 <img
@@ -167,7 +135,6 @@ function StoryCardItem({ story }: { story: StoryCard }) {
               </span>
             </div>
 
-            {/* Stats */}
             <div className="flex items-center gap-2.5 text-muted-foreground flex-shrink-0">
               <span className="flex items-center gap-0.5 text-[10px]">
                 <Heart className="h-3 w-3" />
@@ -185,36 +152,30 @@ function StoryCardItem({ story }: { story: StoryCard }) {
   );
 }
 
-export default function StorySection({ fadeInUp, stagger }: any) {
-  const [stories, setStories] = useState<StoryCard[]>([]);
-  const [loading, setLoading] = useState(true);
+// ✅ Terima stories sebagai props dari parent — tidak fetch sendiri
+export default function StorySection({
+  fadeInUp,
+  stagger,
+  stories,
+  loading,
+}: {
+  fadeInUp: any;
+  stagger: any;
+  stories: StoryCard[];
+  loading: boolean;
+}) {
   const [isHovered, setIsHovered] = useState(false);
   const router = useRouter();
 
-  useEffect(() => {
-    const fetchStories = async () => {
-      try {
-        const res = await fetch("/api/stories");
-        if (!res.ok) throw new Error("Failed to fetch");
-        const data = await res.json();
-        setStories(data.stories ?? []);
-      } catch (err) {
-        console.error("Error fetching stories:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchStories();
-  }, []);
-
-  // Duplikat untuk seamless infinite scroll
+  const safeStories = Array.isArray(stories) ? stories : [];
   const loopData =
-    stories.length > 0 ? [...stories, ...stories, ...stories] : [];
+    safeStories.length > 0
+      ? [...safeStories, ...safeStories, ...safeStories]
+      : [];
 
   return (
     <section className="py-24 px-4">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
         <motion.div
           initial="initial"
           whileInView="animate"
@@ -248,9 +209,7 @@ export default function StorySection({ fadeInUp, stagger }: any) {
           </motion.p>
         </motion.div>
 
-        {/* Scroll Strip */}
         {loading ? (
-          // Skeleton loading
           <div className="flex gap-6 overflow-hidden py-4">
             {Array.from({ length: 4 }).map((_, i) => (
               <div
@@ -259,7 +218,7 @@ export default function StorySection({ fadeInUp, stagger }: any) {
               />
             ))}
           </div>
-        ) : stories.length === 0 ? (
+        ) : safeStories.length === 0 ? (
           <div className="text-center py-20 text-muted-foreground">
             <BookOpen className="h-10 w-10 mx-auto mb-3 opacity-30" />
             <p className="text-sm">Belum ada cerita yang dipublikasikan.</p>
@@ -270,7 +229,8 @@ export default function StorySection({ fadeInUp, stagger }: any) {
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
           >
-            <motion.div
+            {/* ✅ Pakai div biasa, bukan motion.div — hindari konflik CSS animation */}
+            <div
               className="flex gap-6 w-max"
               style={{
                 animation: "storyScrollX 40s linear infinite",
@@ -282,17 +242,14 @@ export default function StorySection({ fadeInUp, stagger }: any) {
                   <StoryCardItem story={story} />
                 </div>
               ))}
-            </motion.div>
+            </div>
 
-            {/* Fade kiri */}
             <div className="pointer-events-none absolute left-0 top-0 h-full w-28 bg-gradient-to-r from-background to-transparent z-10" />
-            {/* Fade kanan */}
             <div className="pointer-events-none absolute right-0 top-0 h-full w-28 bg-gradient-to-l from-background to-transparent z-10" />
           </div>
         )}
 
-        {/* CTA ke semua story */}
-        {!loading && stories.length > 0 && (
+        {!loading && safeStories.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
