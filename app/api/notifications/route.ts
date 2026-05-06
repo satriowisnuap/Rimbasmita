@@ -1,6 +1,6 @@
-import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { getServerSession } from "next-auth";
+import { NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -12,12 +12,15 @@ async function getPrisma() {
 
 export async function GET() {
   try {
-    const prisma = await getPrisma(); // ✅ FIX
+    const prisma = await getPrisma();
 
     const session = await getServerSession(authOptions);
 
     if (!session || !(session.user as any)?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json(
+        { error: "Tidak memiliki akses" },
+        { status: 401 },
+      );
     }
 
     const userId = (session.user as any).id;
@@ -37,9 +40,10 @@ export async function GET() {
 
     return NextResponse.json(notifications);
   } catch (error) {
-    console.error("Error fetching notifications:", error);
+    console.error("Error mengambil notifikasi:", error);
+
     return NextResponse.json(
-      { error: "Internal Server Error" },
+      { error: "Terjadi kesalahan pada server" },
       { status: 500 },
     );
   }
@@ -47,12 +51,15 @@ export async function GET() {
 
 export async function PATCH() {
   try {
-    const prisma = await getPrisma(); // ✅ FIX
+    const prisma = await getPrisma();
 
     const session = await getServerSession(authOptions);
 
     if (!session || !(session.user as any)?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json(
+        { error: "Tidak memiliki akses" },
+        { status: 401 },
+      );
     }
 
     const userId = (session.user as any).id;
@@ -62,11 +69,14 @@ export async function PATCH() {
       data: { is_read: true },
     });
 
-    return NextResponse.json({ message: "All notifications marked as read" });
+    return NextResponse.json({
+      message: "Semua notifikasi ditandai telah dibaca",
+    });
   } catch (error) {
-    console.error("Error updating notifications:", error);
+    console.error("Error memperbarui notifikasi:", error);
+
     return NextResponse.json(
-      { error: "Internal Server Error" },
+      { error: "Terjadi kesalahan pada server" },
       { status: 500 },
     );
   }
@@ -74,12 +84,15 @@ export async function PATCH() {
 
 export async function DELETE() {
   try {
-    const prisma = await getPrisma(); // ✅ FIX
+    const prisma = await getPrisma();
 
     const session = await getServerSession(authOptions);
 
     if (!session || !(session.user as any)?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json(
+        { error: "Tidak memiliki akses" },
+        { status: 401 },
+      );
     }
 
     const userId = (session.user as any).id;
@@ -88,11 +101,14 @@ export async function DELETE() {
       where: { user_id: userId },
     });
 
-    return NextResponse.json({ message: "All notifications deleted" });
+    return NextResponse.json({
+      message: "Semua notifikasi berhasil dihapus",
+    });
   } catch (error) {
-    console.error("Error deleting notifications:", error);
+    console.error("Error menghapus notifikasi:", error);
+
     return NextResponse.json(
-      { error: "Internal Server Error" },
+      { error: "Terjadi kesalahan pada server" },
       { status: 500 },
     );
   }
