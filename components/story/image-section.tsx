@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { ImagePlus, Plus, X } from "lucide-react";
 import Image from "next/image";
 
@@ -35,7 +35,7 @@ export function ImageSection({
     <section className="glass rounded-2xl p-6">
       <label className="flex items-center gap-2 text-sm font-medium text-foreground mb-2">
         <ImagePlus className="h-4 w-4 text-primary" />
-        Images
+        Gambar
       </label>
 
       {/* Drop Zone */}
@@ -57,7 +57,8 @@ export function ImageSection({
           multiple
           className="hidden"
           onChange={() => {
-            const url = prompt("Enter image URL:");
+            const url = prompt("Masukkan URL gambar:");
+
             if (
               url &&
               url.trim() &&
@@ -68,18 +69,25 @@ export function ImageSection({
             }
           }}
         />
+
         <ImagePlus
-          className={`h-8 w-8 mx-auto mb-3 transition-colors ${isDragging ? "text-primary" : "text-muted-foreground/60"}`}
+          className={`h-8 w-8 mx-auto mb-3 transition-colors ${
+            isDragging ? "text-primary" : "text-muted-foreground/60"
+          }`}
         />
+
         <p
-          className={`text-sm font-medium ${isDragging ? "text-primary" : "text-muted-foreground"}`}
+          className={`text-sm font-medium ${
+            isDragging ? "text-primary" : "text-muted-foreground"
+          }`}
         >
           {isDragging
-            ? "Drop images here"
-            : "Drag & drop images or click to add"}
+            ? "Lepaskan gambar di sini"
+            : "Seret & lepas gambar atau klik untuk menambahkan"}
         </p>
+
         <p className="text-xs text-muted-foreground/60 mt-1">
-          Up to 5 images. Add image URLs for now.
+          Maksimal 5 gambar. Untuk saat ini gunakan URL gambar.
         </p>
       </div>
 
@@ -90,9 +98,10 @@ export function ImageSection({
           value={imageUrlInput}
           onChange={(e) => setImageUrlInput(e.target.value)}
           onKeyDown={handleImageUrlKeyDown}
-          placeholder="Paste an image URL..."
+          placeholder="Tempel URL gambar..."
           className="flex-1 bg-card/50 border border-border rounded-xl px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/60 outline-none focus:ring-2 focus:ring-primary/30 transition-all"
         />
+
         <button
           type="button"
           onClick={handleAddImageUrl}
@@ -127,7 +136,7 @@ export function ImageSection({
                 <div className="relative w-full h-full bg-muted animate-pulse">
                   <Image
                     src={url || "/fallback.jpg"}
-                    alt="Story image"
+                    alt="Gambar cerita"
                     fill
                     sizes="(max-width: 768px) 100vw, 50vw"
                     className="object-cover"
@@ -138,6 +147,7 @@ export function ImageSection({
                     }}
                   />
                 </div>
+
                 <button
                   type="button"
                   onClick={() => removeImage(url)}
