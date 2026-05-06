@@ -1,4 +1,4 @@
-import { Leaf, Flame, Wind } from "lucide-react";
+import { Flame, Leaf, Wind } from "lucide-react";
 
 export const moodOptions = [
   {
@@ -31,7 +31,7 @@ export const moodOptions = [
 ];
 
 export const difficultyOptions = [
-  { value: "easy", label: "Easy", color: "text-emerald-500" },
-  { value: "medium", label: "Medium", color: "text-amber-500" },
-  { value: "hard", label: "Hard", color: "text-red-500" },
+  { value: "easy", label: "Mudah", color: "text-emerald-500" },
+  { value: "medium", label: "Menengah", color: "text-amber-500" },
+  { value: "hard", label: "Sulit", color: "text-red-500" },
 ];
