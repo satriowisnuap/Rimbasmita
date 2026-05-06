@@ -1,11 +1,11 @@
 // hooks/navbar/use-navbar.ts
 "use client";
 
-import { useSession, signOut } from "next-auth/react";
-import { useState } from "react";
-import { useTheme } from "next-themes";
-import { useRouter, usePathname } from "next/navigation";
 import { BookOpen, Compass, PenLine, Scroll } from "lucide-react";
+import { signOut, useSession } from "next-auth/react";
+import { useTheme } from "next-themes";
+import { usePathname, useRouter } from "next/navigation";
+import { useState } from "react";
 
 export function useNavbar() {
   const { data: session } = useSession();
@@ -24,16 +24,16 @@ export function useNavbar() {
 
   const navLinks = user
     ? [
-        { href: "/dashboard", label: "Feed", icon: BookOpen },
-        { href: "/explore", label: "Explore", icon: Compass },
-        { href: "/stories", label: "Stories", icon: Scroll },
-        { href: "/create", label: "Write", icon: PenLine },
-        { href: "/journal", label: "Journal", icon: BookOpen },
+        { href: "/dashboard", label: "Beranda", icon: BookOpen },
+        { href: "/explore", label: "Jelajahi", icon: Compass },
+        { href: "/stories", label: "Cerita", icon: Scroll },
+        { href: "/create", label: "Tulis", icon: PenLine },
+        { href: "/journal", label: "Jurnal", icon: BookOpen },
       ]
     : [
-        { href: "/explore", label: "Explore", icon: Compass },
+        { href: "/explore", label: "Jelajahi", icon: Compass },
         ...(isHome
-          ? [{ href: "/stories", label: "Stories", icon: Scroll }]
+          ? [{ href: "/stories", label: "Cerita", icon: Scroll }]
           : []),
       ];
 
