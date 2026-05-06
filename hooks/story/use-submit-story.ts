@@ -89,6 +89,11 @@ export function useSubmitStory() {
 
       if (!response.ok) {
         setError(data.error || "Failed to create story");
+        showAlert({
+          type: "error",
+          title: "Gagal",
+          message: data.error || "Gagal menerbitkan cerita. Silakan coba lagi.",
+        });
         setIsSubmitting(false);
         return;
       }
@@ -165,6 +170,11 @@ export function useSubmitStory() {
 
       if (!response.ok) {
         setError(data.error || "Failed to update story");
+        showAlert({
+          type: "error",
+          title: "Gagal",
+          message: data.error || "Gagal memperbarui cerita. Silakan coba lagi.",
+        });
         setIsSubmitting(false);
         return;
       }
