@@ -2,15 +2,15 @@
 
 import { motion } from "framer-motion";
 import {
+  ArrowRight,
   BookOpen,
   Heart,
-  MessageCircle,
   MapPin,
-  ArrowRight,
+  MessageCircle,
   Quote,
 } from "lucide-react";
-import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 interface StoryCard {
   id: string;
@@ -43,6 +43,65 @@ const difficultyColor: Record<string, string> = {
   extreme: "bg-red-500/20 text-red-400",
 };
 
+// ─── Skeleton Card ────────────────────────────────────────────────────────────
+function StoryCardSkeleton() {
+  return (
+    <div className="min-w-[300px] max-w-[300px]">
+      <div className="glass rounded-2xl overflow-hidden h-[340px] flex flex-col">
+        {/* Cover image placeholder */}
+        <div className="relative h-[130px] flex-shrink-0 overflow-hidden bg-muted/20">
+          <div className="skeleton absolute inset-0" />
+
+          {/* Difficulty badge placeholder */}
+          <div className="absolute top-3 right-3">
+            <div className="skeleton h-4 w-14 rounded-full" />
+          </div>
+
+          {/* Trail name placeholder */}
+          <div className="absolute bottom-2 left-3 flex items-center gap-1">
+            <div className="skeleton h-3 w-3 rounded-full" />
+            <div className="skeleton h-3 w-24 rounded-full" />
+          </div>
+        </div>
+
+        <div className="flex flex-col flex-1 p-4 gap-2">
+          {/* Title */}
+          <div className="space-y-1.5">
+            <div className="skeleton h-3.5 w-full rounded-md" />
+            <div className="skeleton h-3.5 w-4/5 rounded-md" />
+          </div>
+
+          {/* Excerpt */}
+          <div className="space-y-1 mt-1">
+            <div className="skeleton h-2.5 w-full rounded-md" />
+            <div className="skeleton h-2.5 w-3/4 rounded-md" />
+          </div>
+
+          {/* Tags */}
+          <div className="flex gap-1.5 mt-1">
+            <div className="skeleton h-4 w-12 rounded-full" />
+            <div className="skeleton h-4 w-16 rounded-full" />
+            <div className="skeleton h-4 w-10 rounded-full" />
+          </div>
+
+          {/* Author + stats */}
+          <div className="mt-auto flex items-center justify-between pt-2 border-t border-border/30">
+            <div className="flex items-center gap-1.5">
+              <div className="skeleton h-6 w-6 rounded-full flex-shrink-0" />
+              <div className="skeleton h-2.5 w-20 rounded-md" />
+            </div>
+            <div className="flex items-center gap-2.5">
+              <div className="skeleton h-3 w-8 rounded-md" />
+              <div className="skeleton h-3 w-8 rounded-md" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Story Card ───────────────────────────────────────────────────────────────
 function StoryCardItem({ story }: { story: StoryCard }) {
   const router = useRouter();
   const coverImage = story.story_images?.[0]?.image_url;
@@ -101,7 +160,6 @@ function StoryCardItem({ story }: { story: StoryCard }) {
             </p>
           )}
 
-          {/* ✅ Guard story_tags null/undefined */}
           {(story.story_tags ?? []).length > 0 && (
             <div className="flex flex-wrap gap-1">
               {(story.story_tags ?? []).map((t, i) => (
@@ -152,7 +210,7 @@ function StoryCardItem({ story }: { story: StoryCard }) {
   );
 }
 
-// ✅ Terima stories sebagai props dari parent — tidak fetch sendiri
+// ─── Main Section ─────────────────────────────────────────────────────────────
 export default function StorySection({
   fadeInUp,
   stagger,
@@ -209,27 +267,33 @@ export default function StorySection({
           </motion.p>
         </motion.div>
 
+        {/* ── Loading skeleton ── */}
         {loading ? (
-          <div className="flex gap-6 overflow-hidden py-4">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div
-                key={i}
-                className="min-w-[300px] max-w-[300px] h-[340px] glass rounded-2xl animate-pulse"
-              />
-            ))}
+          <div className="relative overflow-hidden py-4">
+            <div className="flex gap-6 w-max">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="px-1">
+                  <StoryCardSkeleton />
+                </div>
+              ))}
+            </div>
+            {/* fade edges */}
+            <div className="pointer-events-none absolute left-0 top-0 h-full w-28 bg-gradient-to-r from-background to-transparent z-10" />
+            <div className="pointer-events-none absolute right-0 top-0 h-full w-28 bg-gradient-to-l from-background to-transparent z-10" />
           </div>
         ) : safeStories.length === 0 ? (
+          /* ── Empty state ── */
           <div className="text-center py-20 text-muted-foreground">
             <BookOpen className="h-10 w-10 mx-auto mb-3 opacity-30" />
             <p className="text-sm">Belum ada cerita yang dipublikasikan.</p>
           </div>
         ) : (
+          /* ── Marquee scroll ── */
           <div
             className="relative overflow-hidden py-4"
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
           >
-            {/* ✅ Pakai div biasa, bukan motion.div — hindari konflik CSS animation */}
             <div
               className="flex gap-6 w-max"
               style={{
@@ -271,6 +335,7 @@ export default function StorySection({
       </div>
 
       <style jsx global>{`
+        /* ── Marquee animation ── */
         @keyframes storyScrollX {
           0% {
             transform: translateX(0%);
@@ -278,6 +343,28 @@ export default function StorySection({
           100% {
             transform: translateX(-33.333%);
           }
+        }
+
+        /* ── Skeleton shimmer ── */
+        @keyframes skeletonShimmer {
+          0% {
+            background-position: -400px 0;
+          }
+          100% {
+            background-position: 400px 0;
+          }
+        }
+
+        .skeleton {
+          border-radius: 4px;
+          background: linear-gradient(
+            90deg,
+            hsl(var(--muted) / 0.3) 25%,
+            hsl(var(--muted) / 0.6) 50%,
+            hsl(var(--muted) / 0.3) 75%
+          );
+          background-size: 800px 100%;
+          animation: skeletonShimmer 1.6s ease-in-out infinite;
         }
       `}</style>
     </section>
