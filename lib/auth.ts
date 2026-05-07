@@ -69,6 +69,7 @@ export const authOptions: NextAuthOptions = {
             email: data.email,
             name: data.username || "User",
             username: data.username,
+            image: data.image,
           };
         } catch (err: any) {
           throw new Error(err.message || "Login gagal");
@@ -132,7 +133,7 @@ export const authOptions: NextAuthOptions = {
       if (user?.email) {
         const { data } = await supabase
           .from("profiles")
-          .select("id, username, role")
+          .select("id, username, role, image")
           .eq("email", user.email.toLowerCase())
           .single();
 
@@ -140,6 +141,7 @@ export const authOptions: NextAuthOptions = {
           token.id = data.id;
           token.username = data.username;
           token.role = data.role;
+          token.image = data.image;
         }
       }
 
@@ -152,6 +154,7 @@ export const authOptions: NextAuthOptions = {
         (session.user as any).id = token.id ?? null;
         (session.user as any).username = token.username ?? null;
         (session.user as any).role = token.role ?? null;
+        (session.user as any).image = token.image ?? null;
       }
       return session;
     },

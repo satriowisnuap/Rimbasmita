@@ -4,7 +4,7 @@ import { BookOpen, Compass, PenLine, Scroll } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
 import { useTheme } from "next-themes";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export function useNavbar() {
   const { data: session } = useSession();
@@ -16,8 +16,33 @@ export function useNavbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
 
+  const [profileImage, setProfileImage] = useState<string | null>(null);
   const user = session?.user;
   const username = session?.user?.username;
+
+  // Fetch profile image from database for the most up-to-date value
+  useEffect(() => {
+    if (user?.email) {
+      const fetchProfile = async () => {
+        try {
+          const { supabase } = await import("@/lib/supabase");
+
+          const { data } = await supabase
+            .from("profiles")
+            .select("image")
+            .eq("email", user.email!.toLowerCase())
+            .single();
+
+          if (data?.image) {
+            setProfileImage(data.image);
+          }
+        } catch (error) {
+          console.error("Error fetching profile image in navbar:", error);
+        }
+      };
+      fetchProfile();
+    }
+  }, [user?.email]);
 
   // Route state
   const isDashboard = pathname.startsWith("/dashboard");
@@ -96,6 +121,7 @@ export function useNavbar() {
   return {
     user,
     username,
+    profileImage,
 
     theme,
     toggleTheme,

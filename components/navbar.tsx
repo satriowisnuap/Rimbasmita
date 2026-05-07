@@ -22,6 +22,7 @@ export function Navbar() {
   const {
     user,
     username,
+    profileImage,
     theme,
     isDashboard,
     isProfile,
@@ -140,9 +141,9 @@ export function Navbar() {
                       href={`/profile/${username}`}
                       className="flex items-center gap-2 px-2 py-1.5 rounded-xl hover:bg-accent/50 transition-all duration-300"
                     >
-                      {user?.image ? (
+                      {profileImage || user?.image ? (
                         <Image
-                          src={user.image}
+                          src={profileImage || user?.image!}
                           alt={user.name || ""}
                           width={28}
                           height={28}
