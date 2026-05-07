@@ -68,25 +68,53 @@ export async function POST(
       );
     }
 
-    const review = await prisma.trailReview.create({
-      data: {
+    const existingReview = await prisma.trailReview.findFirst({
+      where: {
         trail_id: id,
         user_id: userId,
-        rating: Number(rating),
-        comment: comment || "",
-      },
-      include: {
-        profiles: {
-          select: {
-            name: true,
-            username: true,
-            image: true,
-          },
-        },
       },
     });
 
-    return NextResponse.json(review, { status: 201 });
+    let review;
+
+    if (existingReview) {
+      review = await prisma.trailReview.update({
+        where: { id: existingReview.id },
+        data: {
+          rating: Number(rating),
+          comment: comment || "",
+        },
+        include: {
+          profiles: {
+            select: {
+              name: true,
+              username: true,
+              image: true,
+            },
+          },
+        },
+      });
+      return NextResponse.json(review, { status: 200 });
+    } else {
+      review = await prisma.trailReview.create({
+        data: {
+          trail_id: id,
+          user_id: userId,
+          rating: Number(rating),
+          comment: comment || "",
+        },
+        include: {
+          profiles: {
+            select: {
+              name: true,
+              username: true,
+              image: true,
+            },
+          },
+        },
+      });
+      return NextResponse.json(review, { status: 201 });
+    }
   } catch (error) {
     console.error("Error creating trail review:", error);
     return NextResponse.json(
