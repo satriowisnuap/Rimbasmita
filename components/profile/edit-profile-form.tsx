@@ -26,6 +26,7 @@ export function EditProfileForm({ initialData }: EditProfileFormProps) {
   const [bio, setBio] = useState(initialData.bio || "");
   const [location, setLocation] = useState(initialData.location || "");
   const [image, setImage] = useState(initialData.image || "");
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -35,10 +36,17 @@ export function EditProfileForm({ initialData }: EditProfileFormProps) {
     setError("");
 
     try {
+      const formData = new FormData();
+      formData.append("name", name);
+      formData.append("username", username);
+      if (bio) formData.append("bio", bio);
+      if (location) formData.append("location", location);
+      if (image && !avatarFile) formData.append("image", image);
+      if (avatarFile) formData.append("avatar", avatarFile);
+
       const res = await fetch("/api/profile/update", {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, username, bio, location, image }),
+        body: formData,
       });
 
       const data = await res.json();
@@ -90,19 +98,36 @@ export function EditProfileForm({ initialData }: EditProfileFormProps) {
                 <User className="h-10 w-10 text-primary" />
               </div>
             )}
-            <button
-              type="button"
-              onClick={() => {
-                const url = prompt("Masukkan URL gambar profil baru:");
-                if (url) setImage(url);
+            <input
+              type="file"
+              accept="image/*"
+              className="hidden"
+              id="avatar-upload"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  if (file.size > 2 * 1024 * 1024) {
+                    showAlert({
+                      type: "error",
+                      title: "File terlalu besar",
+                      message: "Ukuran maksimal gambar profil adalah 2MB.",
+                    });
+                    return;
+                  }
+                  setAvatarFile(file);
+                  setImage(URL.createObjectURL(file));
+                }
               }}
-              className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-white"
+            />
+            <label
+              htmlFor="avatar-upload"
+              className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-white cursor-pointer"
             >
               <ImageIcon className="h-6 w-6" />
-            </button>
+            </label>
           </div>
           <p className="text-xs text-muted-foreground text-center">
-            Klik gambar untuk mengubah URL foto profil
+            Klik gambar untuk mengubah foto profil (Max 2MB)
           </p>
         </div>
 
