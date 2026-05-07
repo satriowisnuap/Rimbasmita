@@ -50,7 +50,6 @@ export function ImageSection({
           ref={fileInputRef}
           type="file"
           accept="image/*"
-          multiple
           className="hidden"
           onChange={handleFileChange}
         />
@@ -78,7 +77,7 @@ export function ImageSection({
         </p>
 
         <p className="text-xs text-muted-foreground/60 mt-1">
-          Maksimal 5 gambar (maks 3MB per file)
+          Maksimal 1 gambar (maks 3MB)
         </p>
       </div>
 

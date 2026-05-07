@@ -91,12 +91,10 @@ export function EditStoryForm({ slug, initialData }: EditStoryFormProps) {
 
         <ImageSection
           imageUrls={imageManager.imageUrls}
-          imageUrlInput={imageManager.imageUrlInput}
-          setImageUrlInput={imageManager.setImageUrlInput}
           isDragging={imageManager.isDragging}
+          isUploading={imageManager.isUploading}
           fileInputRef={imageManager.fileInputRef}
-          handleAddImageUrl={imageManager.handleAddImageUrl}
-          handleImageUrlKeyDown={imageManager.handleImageUrlKeyDown}
+          handleFileChange={imageManager.handleFileChange}
           removeImage={imageManager.removeImage}
           handleDragOver={imageManager.handleDragOver}
           handleDragLeave={imageManager.handleDragLeave}

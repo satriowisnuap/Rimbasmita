@@ -1,5 +1,4 @@
 import { useState, useCallback, useRef, useEffect } from "react";
-import { supabase } from "@/lib/supabase";
 import { useSession } from "next-auth/react";
 import { useAlert } from "@/components/ui/use-alert";
 
@@ -53,11 +52,11 @@ export function useImageManager(initialImageUrls: string[] = []) {
       return null;
     }
 
-    if (imageUrlsRef.current.length >= 5) {
+    if (imageUrlsRef.current.length >= 1) {
       showAlert({
         type: "error",
         title: "Batas tercapai",
-        message: "Maksimal 5 gambar diperbolehkan.",
+        message: "Maksimal 1 gambar diperbolehkan. Silakan hapus gambar sebelumnya jika ingin menggantinya.",
       });
       return null;
     }
@@ -72,17 +71,21 @@ export function useImageManager(initialImageUrls: string[] = []) {
     const filePath = `${userId}/${fileName}`;
 
     try {
-      const { error } = await supabase.storage
-        .from("rimbasmita")
-        .upload(filePath, file);
+      const formData = new FormData();
+      formData.append("file", file);
 
-      if (error) throw error;
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
 
-      const { data: publicUrlData } = supabase.storage
-        .from("rimbasmita")
-        .getPublicUrl(filePath);
+      const data = await response.json();
 
-      const publicUrl = publicUrlData.publicUrl;
+      if (!response.ok) {
+        throw new Error(data.error || "Gagal mengupload gambar");
+      }
+
+      const publicUrl = data.url;
       
       // Replace local preview with public URL
       setImageUrls((prev) => 
@@ -112,7 +115,7 @@ export function useImageManager(initialImageUrls: string[] = []) {
     if (!files) return;
 
     for (let i = 0; i < files.length; i++) {
-      if (imageUrlsRef.current.length < 5) {
+      if (imageUrlsRef.current.length < 1) {
         await uploadImage(files[i]);
       }
     }
@@ -146,7 +149,7 @@ export function useImageManager(initialImageUrls: string[] = []) {
       if (!files) return;
 
       for (let i = 0; i < files.length; i++) {
-        if (imageUrlsRef.current.length < 5) {
+        if (imageUrlsRef.current.length < 1) {
           await uploadImage(files[i]);
         }
       }

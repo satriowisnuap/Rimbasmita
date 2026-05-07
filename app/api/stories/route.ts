@@ -118,6 +118,13 @@ export async function POST(req: Request) {
     const safeTags = Array.isArray(tags) ? tags : [];
     const safeImages = Array.isArray(imageUrls) ? imageUrls : [];
 
+    if (safeImages.length > 1) {
+      return NextResponse.json(
+        { error: "Maximum 1 image is allowed." },
+        { status: 400 },
+      );
+    }
+
     const story = await prisma.story.create({
       data: {
         user_id: userId,

@@ -119,6 +119,13 @@ export async function PATCH(
       imageUrls,
     } = body;
 
+    if (imageUrls && Array.isArray(imageUrls) && imageUrls.length > 1) {
+      return NextResponse.json(
+        { error: "Maximum 1 image is allowed." },
+        { status: 400 },
+      );
+    }
+
     const existingStory = await prisma.story.findUnique({
       where: { slug },
       select: { id: true, user_id: true },
