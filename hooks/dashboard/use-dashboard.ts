@@ -70,7 +70,7 @@ export function useDashboard() {
 
   const userName = DEV_BYPASS_AUTH ? DEV_USER.name : user?.name || "Pendaki";
 
-  const userImage = DEV_BYPASS_AUTH ? DEV_USER.image : user?.image;
+  const userImage = DEV_BYPASS_AUTH ? DEV_USER.image : profile?.image || user?.image;
 
   const username = profile?.username;
 
