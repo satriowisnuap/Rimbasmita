@@ -4,9 +4,9 @@ import { motion } from "framer-motion";
 import {
   Eye,
   EyeOff,
+  Loader as Loader2,
   Save,
   SendHorizontal as SendHorizonal,
-  Loader as Loader2,
 } from "lucide-react";
 
 interface Props {
@@ -59,14 +59,16 @@ export function PrivacyActionsSection({
               )}
             </motion.div>
           </button>
+
           <div>
             <p className="text-sm font-medium text-foreground">
-              {isPrivate ? "Private" : "Public"}
+              {isPrivate ? "Privat" : "Publik"}
             </p>
+
             <p className="text-xs text-muted-foreground">
               {isPrivate
-                ? "Only you can see this story"
-                : "Visible to the community"}
+                ? "Hanya kamu yang dapat melihat cerita ini"
+                : "Terlihat oleh komunitas"}
             </p>
           </div>
         </div>
@@ -84,8 +86,9 @@ export function PrivacyActionsSection({
             ) : (
               <Save className="h-4 w-4" />
             )}
-            Save Draft
+            Simpan Draft
           </button>
+
           <button
             type="button"
             onClick={onPublish}
@@ -97,7 +100,7 @@ export function PrivacyActionsSection({
             ) : (
               <SendHorizonal className="h-4 w-4" />
             )}
-            Publish
+            Publikasikan
           </button>
         </div>
       </div>

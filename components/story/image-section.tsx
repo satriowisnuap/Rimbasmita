@@ -1,17 +1,15 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
-import { ImagePlus, Plus, X } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
+import { ImagePlus, Loader2, X } from "lucide-react";
 import Image from "next/image";
 
 interface Props {
   imageUrls: string[];
-  imageUrlInput: string;
-  setImageUrlInput: (v: string) => void;
   isDragging: boolean;
+  isUploading: boolean;
   fileInputRef: React.RefObject<HTMLInputElement>;
-  handleAddImageUrl: () => void;
-  handleImageUrlKeyDown: (e: React.KeyboardEvent) => void;
+  handleFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   removeImage: (url: string) => void;
   handleDragOver: (e: React.DragEvent) => void;
   handleDragLeave: (e: React.DragEvent) => void;
@@ -20,12 +18,10 @@ interface Props {
 
 export function ImageSection({
   imageUrls,
-  imageUrlInput,
-  setImageUrlInput,
   isDragging,
+  isUploading,
   fileInputRef,
-  handleAddImageUrl,
-  handleImageUrlKeyDown,
+  handleFileChange,
   removeImage,
   handleDragOver,
   handleDragLeave,
@@ -33,9 +29,9 @@ export function ImageSection({
 }: Props) {
   return (
     <section className="glass rounded-2xl p-6">
-      <label className="flex items-center gap-2 text-sm font-medium text-foreground mb-2">
+      <label className="flex items-center gap-2 text-sm font-medium text-foreground mb-4">
         <ImagePlus className="h-4 w-4 text-primary" />
-        Images
+        Gambar
       </label>
 
       {/* Drop Zone */}
@@ -54,57 +50,35 @@ export function ImageSection({
           ref={fileInputRef}
           type="file"
           accept="image/*"
-          multiple
           className="hidden"
-          onChange={() => {
-            const url = prompt("Enter image URL:");
-            if (
-              url &&
-              url.trim() &&
-              !imageUrls.includes(url.trim()) &&
-              imageUrls.length < 5
-            ) {
-              // handled via parent
-            }
-          }}
+          onChange={handleFileChange}
         />
-        <ImagePlus
-          className={`h-8 w-8 mx-auto mb-3 transition-colors ${isDragging ? "text-primary" : "text-muted-foreground/60"}`}
-        />
+
+        {isUploading ? (
+          <Loader2 className="h-8 w-8 mx-auto mb-3 text-primary animate-spin" />
+        ) : (
+          <ImagePlus
+            className={`h-8 w-8 mx-auto mb-3 transition-colors ${
+              isDragging ? "text-primary" : "text-muted-foreground/60"
+            }`}
+          />
+        )}
+
         <p
-          className={`text-sm font-medium ${isDragging ? "text-primary" : "text-muted-foreground"}`}
+          className={`text-sm font-medium ${
+            isDragging ? "text-primary" : "text-muted-foreground"
+          }`}
         >
           {isDragging
-            ? "Drop images here"
-            : "Drag & drop images or click to add"}
+            ? "Lepaskan gambar di sini"
+            : isUploading
+            ? "Sedang mengupload..."
+            : "Seret & lepas gambar atau klik untuk menambahkan"}
         </p>
-        <p className="text-xs text-muted-foreground/60 mt-1">
-          Up to 5 images. Add image URLs for now.
-        </p>
-      </div>
 
-      {/* URL Input */}
-      <div className="flex gap-2 mt-4">
-        <input
-          type="text"
-          value={imageUrlInput}
-          onChange={(e) => setImageUrlInput(e.target.value)}
-          onKeyDown={handleImageUrlKeyDown}
-          placeholder="Paste an image URL..."
-          className="flex-1 bg-card/50 border border-border rounded-xl px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/60 outline-none focus:ring-2 focus:ring-primary/30 transition-all"
-        />
-        <button
-          type="button"
-          onClick={handleAddImageUrl}
-          disabled={
-            !imageUrlInput.trim() ||
-            imageUrls.includes(imageUrlInput.trim()) ||
-            imageUrls.length >= 5
-          }
-          className="px-3 py-2.5 rounded-xl bg-primary/10 border border-primary/20 text-primary hover:bg-primary/20 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-        >
-          <Plus className="h-4 w-4" />
-        </button>
+        <p className="text-xs text-muted-foreground/60 mt-1">
+          Maksimal 1 gambar (maks 3MB)
+        </p>
       </div>
 
       {/* Image Previews */}
@@ -124,20 +98,28 @@ export function ImageSection({
                 exit={{ opacity: 0, scale: 0.9 }}
                 className="relative group rounded-xl overflow-hidden border border-border aspect-video"
               >
-                <div className="relative w-full h-full bg-muted animate-pulse">
+                <div className="relative w-full h-full bg-muted">
                   <Image
                     src={url || "/fallback.jpg"}
-                    alt="Story image"
+                    alt="Gambar cerita"
                     fill
                     sizes="(max-width: 768px) 100vw, 50vw"
                     className="object-cover"
+                    unoptimized
                     onError={(e) => {
-                      // optional fallback kalau gagal load
                       const img = e.target as HTMLImageElement;
-                      img.src = "/fallback.jpg";
+                      if (!img.src.includes("fallback.jpg")) {
+                        img.src = "/fallback.jpg";
+                      }
                     }}
                   />
+                  {url.startsWith("blob:") && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+                      <Loader2 className="h-6 w-6 text-white animate-spin" />
+                    </div>
+                  )}
                 </div>
+
                 <button
                   type="button"
                   onClick={() => removeImage(url)}

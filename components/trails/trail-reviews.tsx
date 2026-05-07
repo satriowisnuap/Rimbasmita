@@ -9,6 +9,7 @@ import Image from "next/image";
 
 interface Review {
   id: string;
+  user_id: string;
   rating: number;
   comment: string;
   created_at: string;
@@ -51,6 +52,17 @@ export function TrailReviews({ trailId }: TrailReviewsProps) {
     fetchReviews();
   }, [trailId]);
 
+  const userId = (session?.user as any)?.id;
+  const existingReview = reviews.find(r => r.user_id === userId);
+  const isEditing = !!existingReview;
+
+  useEffect(() => {
+    if (existingReview && rating === 0 && comment === "") {
+      setRating(existingReview.rating);
+      setComment(existingReview.comment || "");
+    }
+  }, [existingReview, rating, comment]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!session) {
@@ -73,9 +85,11 @@ export function TrailReviews({ trailId }: TrailReviewsProps) {
 
       if (res.ok) {
         const newReview = await res.json();
-        setReviews([newReview, ...reviews]);
-        setRating(0);
-        setComment("");
+        if (isEditing) {
+          setReviews(reviews.map(r => r.id === newReview.id ? newReview : r));
+        } else {
+          setReviews([newReview, ...reviews]);
+        }
       }
     } catch (err) {
       console.error("Error submitting review:", err);
@@ -144,28 +158,29 @@ export function TrailReviews({ trailId }: TrailReviewsProps) {
           {/* Comment input */}
           <div className="flex flex-col gap-2">
             <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Komentar</span>
-            <div className="relative">
-              <textarea
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
-                placeholder="Ceritakan pengalamanmu mendaki jalur ini..."
-                className="w-full min-h-[120px] glass rounded-2xl p-4 text-sm resize-none focus:ring-2 focus:ring-primary/20 transition-all outline-none"
-              />
-              <button
-                type="submit"
-                disabled={submitting || rating === 0}
-                className="absolute bottom-4 right-4 flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-primary-foreground font-bold text-sm hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-primary/20"
-              >
-                {submitting ? (
-                  <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                ) : (
-                  <>
-                    <Send className="h-4 w-4" />
-                    Kirim Ulasan
-                  </>
-                )}
-              </button>
-            </div>
+            <textarea
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              placeholder="Ceritakan pengalamanmu mendaki jalur ini..."
+              className="w-full min-h-[120px] glass rounded-2xl p-4 text-sm resize-none focus:ring-2 focus:ring-primary/20 transition-all outline-none"
+            />
+          </div>
+
+          <div className="flex justify-end pt-2">
+            <button
+              type="submit"
+              disabled={submitting || rating === 0}
+              className="flex items-center gap-2 px-6 py-3 rounded-xl bg-primary text-primary-foreground font-bold text-sm hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-primary/20"
+            >
+              {submitting ? (
+                <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <>
+                  <Send className="h-4 w-4" />
+                  {isEditing ? "Update Ulasan" : "Kirim Ulasan"}
+                </>
+              )}
+            </button>
           </div>
         </form>
       </motion.div>

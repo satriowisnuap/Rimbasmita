@@ -1,37 +1,37 @@
-import { Leaf, Flame, Wind } from "lucide-react";
+import { Flame, Leaf, Wind } from "lucide-react";
 
 export const moodOptions = [
   {
     value: "calm",
-    label: "Calm",
+    label: "Tenang",
     icon: Leaf,
-    description: "Peaceful & serene",
+    description: "Damai & menenangkan",
     color: "text-emerald-500",
     bg: "bg-emerald-500/10 border-emerald-500/30",
     activeBg: "bg-emerald-500/20 border-emerald-500",
   },
   {
     value: "challenging",
-    label: "Challenging",
+    label: "Menantang",
     icon: Flame,
-    description: "Tough & rewarding",
+    description: "Berat & memuaskan",
     color: "text-orange-500",
     bg: "bg-orange-500/10 border-orange-500/30",
     activeBg: "bg-orange-500/20 border-orange-500",
   },
   {
     value: "reflective",
-    label: "Reflective",
+    label: "Reflektif",
     icon: Wind,
-    description: "Deep & introspective",
-    color: "text-blue-500",
-    bg: "bg-blue-500/10 border-blue-500/30",
-    activeBg: "bg-blue-500/20 border-blue-500",
+    description: "Mendalam & penuh renungan",
+    color: "text-sky-400",
+    bg: "bg-sky-500/10 border-sky-500/30",
+    activeBg: "bg-sky-500/25 border-sky-400 shadow-sky-500/20",
   },
 ];
 
 export const difficultyOptions = [
-  { value: "easy", label: "Easy", color: "text-emerald-500" },
-  { value: "medium", label: "Medium", color: "text-amber-500" },
-  { value: "hard", label: "Hard", color: "text-red-500" },
+  { value: "easy", label: "Mudah", color: "text-emerald-500" },
+  { value: "medium", label: "Menengah", color: "text-amber-500" },
+  { value: "hard", label: "Sulit", color: "text-red-500" },
 ];

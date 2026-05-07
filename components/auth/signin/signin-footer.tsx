@@ -2,7 +2,6 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { Mountain } from "lucide-react";
 
 export function SignInFooter() {
   return (

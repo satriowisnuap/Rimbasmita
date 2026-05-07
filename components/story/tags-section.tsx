@@ -1,7 +1,7 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
-import { Tag, Plus, X } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
+import { Plus, Tag, X } from "lucide-react";
 
 interface Props {
   tags: string[];
@@ -24,8 +24,9 @@ export function TagsSection({
     <section className="glass rounded-2xl p-6">
       <label className="flex items-center gap-2 text-sm font-medium text-foreground mb-2">
         <Tag className="h-4 w-4 text-primary" />
-        Tags
+        Tag
       </label>
+
       <div className="flex flex-wrap gap-2 mb-3">
         <AnimatePresence>
           {tags.map((tag) => (
@@ -37,6 +38,7 @@ export function TagsSection({
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-sm text-primary font-medium"
             >
               {tag}
+
               <button
                 type="button"
                 onClick={() => removeTag(tag)}
@@ -48,16 +50,18 @@ export function TagsSection({
           ))}
         </AnimatePresence>
       </div>
+
       <div className="flex gap-2">
         <input
           type="text"
           value={tagInput}
           onChange={(e) => setTagInput(e.target.value)}
           onKeyDown={handleTagKeyDown}
-          placeholder="Add a tag and press Enter..."
+          placeholder="Tambahkan tag lalu tekan Enter..."
           className="flex-1 bg-card/50 border border-border rounded-xl px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/60 outline-none focus:ring-2 focus:ring-primary/30 transition-all"
           maxLength={30}
         />
+
         <button
           type="button"
           onClick={handleAddTag}
@@ -71,8 +75,9 @@ export function TagsSection({
           <Plus className="h-4 w-4" />
         </button>
       </div>
+
       <p className="text-xs text-muted-foreground mt-2">
-        Up to 10 tags. Press Enter or comma to add.
+        Maksimal 10 tag. Tekan Enter atau koma untuk menambahkan.
       </p>
     </section>
   );

@@ -1,34 +1,130 @@
 import { useState, useCallback, useRef, useEffect } from "react";
+import { useSession } from "next-auth/react";
+import { useAlert } from "@/components/ui/use-alert";
 
 export function useImageManager(initialImageUrls: string[] = []) {
+  const { data: session } = useSession();
+  const { showAlert } = useAlert();
   const [imageUrls, setImageUrls] = useState<string[]>(initialImageUrls);
-  const [imageUrlInput, setImageUrlInput] = useState("");
+  const imageUrlsRef = useRef<string[]>(initialImageUrls);
   const [isDragging, setIsDragging] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    imageUrlsRef.current = imageUrls;
+  }, [imageUrls]);
 
   useEffect(() => {
     if (initialImageUrls.length > 0 && imageUrls.length === 0) {
       setImageUrls(initialImageUrls);
+      imageUrlsRef.current = initialImageUrls;
     }
   }, [initialImageUrls]);
 
-  const handleAddImageUrl = useCallback(() => {
-    const trimmed = imageUrlInput.trim();
-    if (trimmed && !imageUrls.includes(trimmed) && imageUrls.length < 5) {
-      setImageUrls((prev) => [...prev, trimmed]);
-      setImageUrlInput("");
+  const uploadImage = async (file: File) => {
+    const userId = (session?.user as any)?.id;
+    if (!userId) {
+      showAlert({
+        type: "error",
+        title: "Unauthorized",
+        message: "Anda harus login untuk mengupload gambar.",
+      });
+      return null;
     }
-  }, [imageUrlInput, imageUrls]);
 
-  const handleImageUrlKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        handleAddImageUrl();
+    // Validation
+    if (!file.type.startsWith("image/")) {
+      showAlert({
+        type: "error",
+        title: "File tidak valid",
+        message: "Hanya file gambar yang diperbolehkan.",
+      });
+      return null;
+    }
+
+    if (file.size > 3 * 1024 * 1024) {
+      showAlert({
+        type: "error",
+        title: "File terlalu besar",
+        message: "Ukuran maksimal file adalah 3MB.",
+      });
+      return null;
+    }
+
+    if (imageUrlsRef.current.length >= 1) {
+      showAlert({
+        type: "error",
+        title: "Batas tercapai",
+        message: "Maksimal 1 gambar diperbolehkan. Silakan hapus gambar sebelumnya jika ingin menggantinya.",
+      });
+      return null;
+    }
+
+    // Create local preview
+    const previewUrl = URL.createObjectURL(file);
+    setImageUrls((prev) => [...prev, previewUrl]);
+    setIsUploading(true);
+
+    const timestamp = Date.now();
+    const fileName = `${timestamp}-${file.name.replace(/\s+/g, "_")}`;
+    const filePath = `${userId}/${fileName}`;
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Gagal mengupload gambar");
       }
-    },
-    [handleAddImageUrl],
-  );
+
+      const publicUrl = data.url;
+      
+      // Replace local preview with public URL
+      setImageUrls((prev) => 
+        prev.map((url) => (url === previewUrl ? publicUrl : url))
+      );
+      
+      return publicUrl;
+    } catch (error: any) {
+      console.error("Upload error:", error);
+      // Remove preview if upload failed
+      setImageUrls((prev) => prev.filter((url) => url !== previewUrl));
+      
+      showAlert({
+        type: "error",
+        title: "Upload Gagal",
+        message: error.message || "Terjadi kesalahan saat mengupload gambar.",
+      });
+      return null;
+    } finally {
+      setIsUploading(false);
+      URL.revokeObjectURL(previewUrl);
+    }
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+
+    for (let i = 0; i < files.length; i++) {
+      if (imageUrlsRef.current.length < 1) {
+        await uploadImage(files[i]);
+      }
+    }
+
+    // Reset input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
 
   const removeImage = useCallback((url: string) => {
     setImageUrls((prev) => prev.filter((u) => u !== url));
@@ -45,34 +141,33 @@ export function useImageManager(initialImageUrls: string[] = []) {
   }, []);
 
   const handleDrop = useCallback(
-    (e: React.DragEvent) => {
+    async (e: React.DragEvent) => {
       e.preventDefault();
       setIsDragging(false);
-      const url = prompt("Enter image URL:");
-      if (
-        url &&
-        url.trim() &&
-        !imageUrls.includes(url.trim()) &&
-        imageUrls.length < 5
-      ) {
-        setImageUrls((prev) => [...prev, url.trim()]);
+
+      const files = e.dataTransfer.files;
+      if (!files) return;
+
+      for (let i = 0; i < files.length; i++) {
+        if (imageUrlsRef.current.length < 1) {
+          await uploadImage(files[i]);
+        }
       }
     },
-    [imageUrls],
+    [imageUrls, session, showAlert],
   );
 
   return {
     imageUrls,
     setImageUrls,
-    imageUrlInput,
-    setImageUrlInput,
     isDragging,
+    isUploading,
     fileInputRef,
-    handleAddImageUrl,
-    handleImageUrlKeyDown,
+    handleFileChange,
     removeImage,
     handleDragOver,
     handleDragLeave,
     handleDrop,
   };
 }
+

@@ -1,5 +1,8 @@
 "use client";
 
+import { Eye, EyeOff } from "lucide-react";
+import { useState } from "react";
+
 interface Props {
   email: string;
   setEmail: (v: string) => void;
@@ -17,6 +20,8 @@ export function SignInEmailForm({
   loading,
   onSubmit,
 }: Props) {
+  const [showPassword, setShowPassword] = useState(false);
+
   return (
     <div className="space-y-3">
       <input
@@ -27,13 +32,27 @@ export function SignInEmailForm({
         className="w-full px-4 py-3 rounded-xl glass bg-transparent text-sm outline-none"
       />
 
-      <input
-        type="password"
-        placeholder="Password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        className="w-full px-4 py-3 rounded-xl glass bg-transparent text-sm outline-none"
-      />
+      <div className="relative">
+        <input
+          type={showPassword ? "text" : "password"}
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          className="w-full px-4 py-3 pr-12 rounded-xl glass bg-transparent text-sm outline-none"
+        />
+
+        <button
+          type="button"
+          onClick={() => setShowPassword(!showPassword)}
+          className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+        >
+          {showPassword ? (
+            <EyeOff className="h-4 w-4" />
+          ) : (
+            <Eye className="h-4 w-4" />
+          )}
+        </button>
+      </div>
 
       <button
         onClick={onSubmit}

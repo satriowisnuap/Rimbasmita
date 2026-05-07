@@ -12,7 +12,6 @@ export async function GET() {
   try {
     const prisma = await getPrisma();
 
-    // ✅ Satu koneksi, dua query parallel — tidak berebut pool
     const [storiesRaw, trailsRaw] = await Promise.all([
       prisma.story.findMany({
         where: {
@@ -51,45 +50,38 @@ export async function GET() {
       }),
 
       prisma.trail.findMany({
-        take: 20,
+        take: 6,
+        orderBy: {
+          stories: { _count: "desc" }, // fix: hapus backslash
+        },
         include: {
-          _count: {
-            select: {
-              stories: {
-                where: { is_private: false, is_draft: false },
-              },
-              trail_reviews: true,
-            },
-          },
-          trail_reviews: {
-            select: { rating: true },
-          },
+          _count: { select: { stories: true, trail_reviews: true } },
+          trail_reviews: { select: { rating: true } },
         },
       }),
     ]);
 
-    // Process trails
-    const trails = trailsRaw
-      .map((trail) => {
-        const storiesCount = trail._count?.stories ?? 0;
-        const reviewsCount = trail._count?.trail_reviews ?? 0;
-        const validRatings =
-          trail.trail_reviews?.map((r) => Number(r.rating) || 0) ?? [];
-        const avgRating =
-          validRatings.length > 0
-            ? validRatings.reduce((a, b) => a + b, 0) / validRatings.length
-            : 0;
+    // Process trails — hitung avgRating dari reviews yang sudah di-fetch
+    const trails = trailsRaw.map((trail) => {
+      const storiesCount = trail._count?.stories ?? 0;
+      const reviewsCount = trail._count?.trail_reviews ?? 0;
 
-        return {
-          ...trail,
-          totalActivity: storiesCount + reviewsCount,
-          avgRating: Number(avgRating.toFixed(1)),
-          storiesCount,
-          reviewsCount,
-        };
-      })
-      .sort((a, b) => b.totalActivity - a.totalActivity)
-      .slice(0, 6);
+      const validRatings =
+        trail.trail_reviews?.map((r) => Number(r.rating) || 0) ?? [];
+      const avgRating =
+        validRatings.length > 0
+          ? validRatings.reduce((a, b) => a + b, 0) / validRatings.length
+          : 0;
+
+      return {
+        ...trail,
+        totalActivity: storiesCount + reviewsCount,
+        avgRating: Number(avgRating.toFixed(1)),
+        storiesCount,
+        reviewsCount,
+      };
+    });
+    // Tidak perlu .sort() + .slice() lagi — DB sudah mengurutkan & membatasi ke 6
 
     return NextResponse.json({
       stories: storiesRaw,
