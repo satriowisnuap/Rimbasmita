@@ -56,14 +56,8 @@ export function EditProfileForm({ initialData }: EditProfileFormProps) {
         return;
       }
 
-      // Success
-      showAlert({
-        type: "success",
-        title: "Profil diperbarui",
-        message: "Informasi profil Anda berhasil diperbarui.",
-      });
-      
-      router.push(`/profile/${username.toLowerCase()}`);
+      // Redirect with query param for alert persistence
+      router.push(`/profile/${username.toLowerCase()}?updated=true`);
       router.refresh();
     } catch (err) {
       console.error("Update profile error:", err);

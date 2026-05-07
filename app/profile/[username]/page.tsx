@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { Mountain, User } from "lucide-react";
 import { motion } from "framer-motion";
 import { Navbar } from "@/components/navbar";
@@ -33,7 +35,24 @@ export default function ProfilePage() {
     session,
     getCoverImage,
   } = useProfile();
-  const { state: alert } = useAlert();
+  const { state: alert, showAlert } = useAlert();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
+  useEffect(() => {
+    const updated = searchParams.get("updated");
+    if (updated === "true") {
+      showAlert({
+        type: "success",
+        title: "Profil diperbarui",
+        message: "Informasi profil Anda berhasil diperbarui.",
+      });
+
+      // Clean up the URL
+      const newUrl = window.location.pathname;
+      window.history.replaceState({}, "", newUrl);
+    }
+  }, [searchParams, showAlert]);
 
   // Loading state
   if (loading) {
